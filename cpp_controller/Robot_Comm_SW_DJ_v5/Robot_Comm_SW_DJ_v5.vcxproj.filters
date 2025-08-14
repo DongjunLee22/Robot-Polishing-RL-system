@@ -1,0 +1,201 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="소스 파일">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="헤더 파일">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="리소스 파일">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="소스 파일\src">
+      <UniqueIdentifier>{f2afb8f1-259d-4370-bfb1-41334bd2d283}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="소스 파일\src\Math">
+      <UniqueIdentifier>{b48ee066-b127-483a-8957-87b01f5ce659}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="소스 파일\src\Robot">
+      <UniqueIdentifier>{afbb5afd-8354-41fd-84d7-073abc132d82}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="소스 파일\src\Utils">
+      <UniqueIdentifier>{084661c2-46d5-445f-b1e7-29704610bf75}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="헤더 파일\src">
+      <UniqueIdentifier>{54cd9e82-46db-4d48-900b-4571600ce982}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="헤더 파일\src\Math">
+      <UniqueIdentifier>{5222f154-3e58-4a76-81d8-b9b019105bd2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="헤더 파일\src\Robot">
+      <UniqueIdentifier>{f863543b-e5ee-440d-a9bd-a311d3d8f3a7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="헤더 파일\src\Utils">
+      <UniqueIdentifier>{d8ae7861-9b9b-4178-a693-952771acd291}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="소스 파일\src\Pneumatics">
+      <UniqueIdentifier>{b99423c8-9c4d-4e58-bb46-b9e7eb9409c1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="헤더 파일\src\Pneumatics">
+      <UniqueIdentifier>{f1839125-1ed0-42d0-b196-7a1863dead88}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="소스 파일\src\FTSensor">
+      <UniqueIdentifier>{cafa666d-5f49-43cf-9311-dc9e3623ebef}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="헤더 파일\src\FTSensor">
+      <UniqueIdentifier>{cbd1bb5c-f43c-4801-ada7-c9d692246408}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Robot_Comm_SW_DJ_v5.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="Robot_Comm_SW_DJ_v5Dlg.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="framework.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="targetver.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="Resource.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="pch.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="stdafx.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Math\AllMath.h">
+      <Filter>헤더 파일\src\Math</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Math\RotationZYZ.h">
+      <Filter>헤더 파일\src\Math</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Math\Transformation_force.h">
+      <Filter>헤더 파일\src\Math</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Math\Transformation_torque.h">
+      <Filter>헤더 파일\src\Math</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Math\VectorRange.h">
+      <Filter>헤더 파일\src\Math</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Robot\AllRobot.h">
+      <Filter>헤더 파일\src\Robot</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Robot\TrajectoryIO.h">
+      <Filter>헤더 파일\src\Robot</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Utils\OScopeCtrl.h">
+      <Filter>헤더 파일\src\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Utils\PIDController.h">
+      <Filter>헤더 파일\src\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Utils\ThreadHelpers.h">
+      <Filter>헤더 파일\src\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Utils\AllUtils.h">
+      <Filter>헤더 파일\src\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Pneumatics\AirControl.h">
+      <Filter>헤더 파일\src\Pneumatics</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Robot\RobotState.h">
+      <Filter>헤더 파일\src\Robot</Filter>
+    </ClInclude>
+    <ClInclude Include="src\FTSensor\FTState.h">
+      <Filter>헤더 파일\src\FTSensor</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Utils\LowPassFilter.h">
+      <Filter>헤더 파일\src\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src\FTSensor\AllFTSensor.h">
+      <Filter>헤더 파일\src\FTSensor</Filter>
+    </ClInclude>
+    <ClInclude Include="src\FTSensor\FTSensorFunction.h">
+      <Filter>헤더 파일\src\FTSensor</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Robot\VelProfile.h">
+      <Filter>헤더 파일\src\Robot</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Utils\TcpClient.h">
+      <Filter>헤더 파일\src\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Utils\Protocol.h">
+      <Filter>헤더 파일\src\Utils</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Robot_Comm_SW_DJ_v5.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="Robot_Comm_SW_DJ_v5Dlg.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="pch.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="uuids.c">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="stdafx.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Math\Transformation_force.cpp">
+      <Filter>소스 파일\src\Math</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Math\Transformation_torque.cpp">
+      <Filter>소스 파일\src\Math</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Robot\TrajectoryIO.cpp">
+      <Filter>소스 파일\src\Robot</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Utils\OScopeCtrl.cpp">
+      <Filter>소스 파일\src\Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Utils\PIDController.cpp">
+      <Filter>소스 파일\src\Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Pneumatics\AirControl.cpp">
+      <Filter>소스 파일\src\Pneumatics</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Robot\RobotState.cpp">
+      <Filter>소스 파일\src\Robot</Filter>
+    </ClCompile>
+    <ClCompile Include="src\FTSensor\FTState.cpp">
+      <Filter>소스 파일\src\FTSensor</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Utils\LowPassFilter.cpp">
+      <Filter>소스 파일\src\Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="src\FTSensor\FTSensorFunction.cpp">
+      <Filter>소스 파일\src\FTSensor</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Utils\TcpClient.cpp">
+      <Filter>소스 파일\src\Utils</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="RobotCommSWDJv5.rc">
+      <Filter>리소스 파일</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="res\RobotCommSWDJv5.rc2">
+      <Filter>리소스 파일</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="res\Robot_Comm_SW_DJ_v5.ico">
+      <Filter>리소스 파일</Filter>
+    </Image>
+  </ItemGroup>
+</Project>
