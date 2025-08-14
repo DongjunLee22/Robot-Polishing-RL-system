@@ -1,0 +1,1671 @@
+<!DOCTYPE html>
+
+<html lang="ko">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>폴리싱 로봇 제어 소프트웨어 사용자 매뉴얼</title>
+<style>.container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 24px 40px;
+    background-color: #fff;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    }
+.chart-container {
+    position: relative;
+    margin: 3em auto;
+    max-width: 500px;
+    min-height: 200px;
+    width: 100%;
+    height: auto;
+    overflow: visible;
+    }
+img {
+    display: block;
+    overflow: hidden;
+    max-width: 100%;
+    max-height: 280px;
+    margin: 1em auto;
+    border-radius: 8px;
+    }
+h5 {
+    font-size: 16px;
+    }
+body {
+    font-family: "Malgun Gothic", "맑은 고딕", sans-serif;
+    line-height: 1.8;
+    font-size: 16px;
+    color: #333;
+    background-color: #fafafa;
+    margin: 0 24px 0 24px;
+    padding: 0;
+    max-width: None;
+    }
+h1, h2, h3, h4 {
+    font-family: "Segoe UI", "Malgun Gothic", sans-serif;
+    font-weight: 700;
+    line-height: 1.3;
+    margin-top: 24px;
+    margin-bottom: 20px;
+    color: #1a1a1a;
+    font-size: 28px;
+    }
+h1 {
+    font-size: 28px;
+    border-bottom: 2px solid #eee;
+    padding-bottom: 0.5em;
+    margin-top: 24px;
+    margin-bottom: 20px;
+    }
+h2 {
+    font-size: 25px;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 0.4em;
+    }
+h3 {
+    font-size: 20px;
+    }
+h4 {
+    font-size: 18px;
+    }
+p {
+    margin-bottom: 1.2em;
+    }
+a {
+    color: #0073e6;
+    text-decoration: none;
+    }
+a:hover {
+    text-decoration: underline;
+    }
+blockquote {
+    border-left: 4px solid #0073e6;
+    padding-left: 20px;
+    margin: 2em 0;
+    color: #555;
+    font-style: italic;
+    }
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 2em 0;
+    font-size: 16px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+th, td {
+    border: 1px solid #ddd;
+    padding: 12px 15px;
+    text-align: left;
+    }
+th {
+    background-color: #f8f8f8;
+    font-weight: 600;
+    }
+tr:nth-child(even) {
+    background-color: #fdfdfd;
+    }
+code {
+    font-family: "Consolas", "Monaco", "Courier New", monospace;
+    background-color: #f0f0f0;
+    padding: 0.2em 0.4em;
+    border-radius: 4px;
+    font-size: 0.9em;
+    }
+pre {
+    background-color: #2d2d2d;
+    color: #f8f8f2;
+    padding: 20px;
+    border-radius: 8px;
+    overflow-x: auto;
+    font-size: 15px;
+    }
+pre code {
+    background-color: transparent;
+    padding: 0;
+    }
+ul, ol {
+    padding-left: 20px;
+    }
+li {
+    margin-bottom: 0.5em;
+    }
+.toc {
+    background: #f9f9f9;
+    border: 1px solid #e0e0e0;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 2em;
+    }
+.toc h3 {
+    margin-top: 0;
+    border-bottom: 1px solid #ccc;
+    padding-bottom: 10px;
+    }
+.toc ul {
+    list-style-type: none;
+    padding-left: 0;
+    }
+.toc > ul > li {
+    font-weight: bold;
+    margin-top: 10px;
+    }
+.toc > ul > li > ul > li {
+    font-weight: normal;
+    margin-left: 20px;
+    }
+@media only screen and (max-device-width: 768px) {
+            body {
+                padding: 0;
+                margin: 0;
+                font-family: PingFang SC;
+                font-size: 15px;
+                line-height: 1.5;
+            }
+
+            .container {
+                padding: 0;
+                margin: 16px 20px 30px;
+                box-shadow: none;
+            }
+
+            h1,
+            h2,
+            h3,
+            h4 {
+                font-family: PingFang SC;
+            }
+
+            h1 {
+                font-size: 1.87em;
+                line-height: 1.6;
+                margin-bottom: 0.5em;
+                text-align: center;
+            }
+
+            h2 {
+                font-size: 1.6em;
+                font-weight: 600;
+                margin-top: 1.3em;
+                margin-bottom: 0.8em;
+                border-bottom: 1px solid #eee;
+                padding-bottom: 0.5em;
+            }
+
+            h3 {
+                font-size: 1.2em;
+                font-weight: 600;
+                margin-top: 1em;
+                margin-bottom: 0.6em;
+            }
+
+            h4 {
+                font-size: 1.1em;
+                font-weight: 500;
+                margin-top: 1em;
+                margin-bottom: 0.5em;
+                font-style: normal;
+            }
+
+            h5 {
+                font-size: 1em;
+                font-weight: 500;
+                margin-bottom: 1.2em;
+            }
+
+            ul,
+            ol {
+                font-size: 1em; /* Equivalent to 17.6px if base is 16px */
+                font-weight: 400;
+                margin-bottom: 1.2em;
+                line-height: 1.8;
+            }
+
+            p {
+                font-size: 1em;
+                line-height: 1.8; /* Equivalent to 17.6px if base is 16px */
+                font-weight: 400;
+                margin-top: 0.8em;
+                margin-bottom: 0.8em;
+            }
+
+            blockquote {
+                padding: 1em 1.2em;
+
+            p {
+                margin: 0;
+            }
+        }
+
+        figcaption {
+            margin-top: 0.5em;
+            font-size: 0.8em; /* Equivalent to 17.6px if base is 16px */
+            font-weight: 400;
+            text-align: center;
+            font-style: normal;
+            color: #7F8896;
+        }
+
+        img {
+            display: block;
+            overflow: hidden;
+            max-width: 100%;
+            max-height: 335px;
+            margin: 1em auto;
+            border-radius: 8px;
+        }
+        }</style>
+        <!-- <style>
+        @media print {
+
+        /* 1. 페이지 크기, 여백 설정 */
+        @page {
+            size: A4;        /* 페이지 크기를 A4로 지정 */
+            margin: 25mm;    /* 상하좌우 여백을 2.5cm로 설정 (조절 가능) */
+        }
+
+        /* 2. 페이지 나누기 규칙 (기존과 동일) */
+        /* 각 장(h2)이 새로운 페이지에서 시작하도록 설정 */
+        h2 {
+            page-break-before: always;
+        }
+
+        /* 목차(toc) 다음에 페이지 나누기 */
+        #toc {
+            page-break-after: always;
+        }
+
+        /* 3. 내용 잘림 방지 규칙 (가장 중요!) */
+        /* 아래 요소들 내부에서는 페이지가 나뉘지 않도록 설정 */
+        table, pre, blockquote, img, ol, ul {
+            page-break-inside: avoid;
+        }
+    }
+    </style> -->
+</head>
+
+
+<body>
+<div class="container">
+<h1 id="section-1">폴리싱 로봇 제어 소프트웨어 사용자 매뉴얼</h1>
+<div class="toc" id="toc">
+<h3 id="section-0-1">목차</h3>
+<ul>
+<li><a href="#section-intro">1. 매뉴얼 개요</a>
+<ul>
+<li><a href="#section-intro-purpose">1.1. 문서 목적</a></li>
+</ul>
+</li>
+<li><a href="#section-specs">2. 시스템 명세</a>
+<ul>
+<li><a href="#section-specs-hardware">2.1. 하드웨어 구성</a></li>
+<li><a href="#section-specs-software">2.2. 소프트웨어 요구사항</a></li>
+</ul>
+</li>
+<li><a href="#section-architecture">3. 시스템 아키텍처</a>
+<ul>
+<li><a href="#section-architecture-diagram">3.1. 전체 시스템 구성도</a></li>
+</ul>
+</li>
+<li><a href="#section-user-guide">4. 기본 작동법</a>
+<ul>
+<li><a href="#section-user-guide-flat">4.1. 평면 경로 구동 절차</a></li>
+<li><a href="#section-user-guide-curved">4.2. 곡면 경로 구동 절차</a></li>
+<li><a href="#section-user-guide-stop">4.3. 구동 종료 방법</a></li>
+</ul>
+</li>
+<li><a href="#section-dev-guide">5. 소프트웨어 심층 분석</a>
+<ul>
+<li><a href="#section-dev-guide-main">5.1. 메인 제어 모듈 (CRobotCommSWDJv5Dlg)</a></li>
+<li><a href="#section-dev-guide-ft">5.2. FT 센서 제어 모듈</a></li>
+<li><a href="#section-dev-guide-air">5.3. 공압 제어 모듈</a></li>
+<li><a href="#section-dev-guide-robot">5.4. 로봇 상태 및 궤적 관리</a></li>
+</ul>
+</li>
+<li><a href="#section-appendix">6. 핵심 유틸리티 라이브러리</a>
+<ul>
+<li><a href="#section-appendix-math">6.1. 수학 함수</a></li>
+<li><a href="#section-appendix-signal">6.2. 신호 처리 및 제어</a></li>
+<li><a href="#section-appendix-tcpip">6.3. TCP/IP 통신</a></li>
+<li><a href="#section-appendix-utils">6.4. 기타 유틸리티</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<h2 id="section-intro">1. 매뉴얼 개요</h2>
+<h3 id="section-intro-purpose">1.1. 문서 목적</h3>
+<p>본 매뉴얼은 폴리싱 로봇 제어 시스템의 전체적인 구성과 작동 방법, 그리고 핵심 소프트웨어 모듈의 코드 및 기능에 대한 상세한 설명을 제공하는 것을 목적으로 합니다. 사용자는 본 문서를 통해 시스템의 각 구성 요소를 이해하고, 소프트웨어의 사용법을 신속하게 파악하여 로봇을 효과적으로 운용할 수 있습니다.</p>
+<h2 id="section-specs">2. 시스템 명세</h2>
+<p>폴리싱 로봇 시스템은 정밀한 힘 제어와 경로 추종을 위해 엄선된 하드웨어와 맞춤형 소프트웨어로 구성됩니다.</p>
+<h3 id="section-specs-hardware">2.1. 하드웨어 구성</h3>
+<table>
+<thead>
+<tr>
+<th>구성 요소</th>
+<th>모델명 / 규격</th>
+<th>주요 역할</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>FT 센서</strong></td>
+<td>ADIN Robotics R-R-Adn-AFT200-D80-C</td>
+<td>폴리싱 툴과 작업물 사이의 힘/토크를 정밀하게 측정</td>
+</tr>
+<tr>
+<td><strong>폴리싱 툴</strong></td>
+<td>Schnuk MFT-390-F-R-0</td>
+<td>실제 폴리싱 작업을 수행하는 엔드 이펙터</td>
+</tr>
+<tr>
+<td><strong>DAQ 보드</strong></td>
+<td>NI PCIe-6323, SCB-68A</td>
+<td>아날로그/디지털 신호 수집</td>
+</tr>
+<tr>
+<td><strong>비례압력 레귤레이터</strong></td>
+<td>FESTO VPPI-5L-3-G180-0L6H-V1-S1D</td>
+<td>DAQ 보드의 제어 신호에 따라 공압을 정밀하게 조절</td>
+</tr>
+</tbody>
+</table>
+<h3 id="section-specs-software">2.2. 소프트웨어 요구사항</h3>
+<p>제어 소프트웨어는 C++ 언어와 MFC(Microsoft Foundation Class) 라이브러리를 기반으로 개발되었습니다. 이를 통해 GUI(그래픽 사용자 인터페이스) 환경에서 로봇의 모든 기능을 통합적으로 제어할 수 있습니다.</p>
+<ul>
+<li><strong>개발 언어:</strong> C++</li>
+<li><strong>프레임워크:</strong> MFC (Microsoft Foundation Class)</li>
+<li><strong>주요 기능:</strong> 두산 로봇 실시간 통신, 힘 제어, 평면/곡면 경로 구동, 공압 제어, 센서 데이터 로깅</li>
+</ul>
+<h2 id="section-architecture">3. 시스템 아키텍처</h2>
+<p>본 소프트웨어는 MFC 대화상자 기반의 메인 스레드가 사용자 인터페이스를 처리하고, 각 핵심 기능(로봇 제어, 센서 데이터 수집, 공압 제어 등)은 별도의 백그라운드 스레드에서 비동기적으로 동작하는 멀티스레드 구조를 가집니다. 이를 통해 실시간성과 안정성을 동시에 확보합니다.</p>
+
+
+<h2 id="section-user-guide">4. 기본 작동법</h2>
+<p>본 섹션에서는 소프트웨어 GUI를 이용한 폴리싱 로봇의 기본 조작 순서를 설명합니다.</p>
+<h3 id="section-user-guide-flat">4.1. 평면 경로 구동 절차</h3>
+<ol>
+<li><strong>로봇 연결:</strong> "1. 제어기 연결" 버튼을 클릭하여 로봇 제어기와 통신을 시작합니다.</li>
+<li><strong>평면 경로 로드:</strong> "평면 경로" 버튼을 클릭하여 사전에 정의된 평면 작업 경로 파일을 불러옵니다.</li>
+<li><strong>초기 자세 리셋:</strong> "2. 초기 자세 재조정" 버튼을 클릭하여 로봇을 홈 위치로 초기화합니다.</li>
+<li><strong>초기 위치 이동:</strong> "3. 초기 위치 이동" 버튼을 클릭하여 작업 시작 지점으로 로봇을 이동시킵니다.</li>
+<li><strong>서보 모드 전환:</strong> "4. 서보 제어" 버튼을 클릭하여 로봇을 실시간 제어 모드로 전환합니다.</li>
+<li><strong>힘 제어 시작:</strong> "5. 경로 구동" 버튼을 클릭하여 힘 제어 기반의 평면 폴리싱 작업을 시작합니다.</li>
+</ol>
+<h3 id="section-user-guide-curved">4.2. 곡면 경로 구동 절차</h3>
+<p>곡면 경로 구동 절차는 평면 경로 구동과 대부분 동일하며, 2단계에서 "곡면 경로" 버튼을 클릭하는 점만 다릅니다.</p>
+<ol>
+<li><strong>로봇 연결:</strong> "1. 제어기 연결" 버튼 클릭</li>
+<li><strong>곡면 경로 로드:</strong> "곡면 경로" 버튼 클릭</li>
+<li><strong>초기 자세 리셋:</strong> "2. 초기 자세 재조정" 버튼 클릭</li>
+<li><strong>초기 위치 이동:</strong> "3. 초기 위치 이동" 버튼 클릭</li>
+<li><strong>서보 모드 전환:</strong> "4. 서보 제어" 버튼 클릭</li>
+<li><strong>힘 제어 시작:</strong> "5. 경로 구동" 버튼 클릭</li>
+</ol>
+<h3 id="section-user-guide-stop">4.3. 구동 종료 방법</h3>
+<p>폴리싱 작업을 중지하거나 시스템 자체를 종료할 때는 다음 절차를 따릅니다.</p>
+<ol>
+<li><strong>로봇 정지:</strong> "구동 종료" 버튼을 클릭하여 현재 진행 중인 모든 로봇의 움직임을 정지시킵니다.</li>
+<li><strong>로봇 연결 해제:</strong> "연결 종료" 버튼을 클릭하여 로봇 제어기와의 통신을 안전하게 종료합니다.</li>
+</ol>
+
+<h2 id="section-dev-guide">5. 소프트웨어 심층 분석</h2>
+<p>본 섹션은 소프트웨어의 핵심 모듈과 클래스에 대한 기술적인 설명을 제공합니다.</p>
+<h3 id="section-dev-guide-main">5.1. 메인 제어 모듈: <code>CRobotCommSWDJv5Dlg</code></h3>
+<p><code>CRobotCommSWDJv5Dlg</code> 클래스는 MFC 기반의 메인 대화상자로, 전체 시스템의 허브 역할을 수행합니다. GUI 이벤트 처리, 스레드 관리, 데이터 교환 등 모든 핵심 기능이 이 클래스를 중심으로 통합됩니다.</p>
+<h4>5.1.1. 주요 데이터 구조체</h4>
+<p>소프트웨어의 상태와 핵심 파라미터는 여러 구조체를 통해 체계적으로 관리됩니다.
+    이 데이터 구조체들은 로봇의 현재 상태, 사용자 설정값, 제어 플래그 등을 저장하며, 멀티스레드 환경에서 각 모듈이 데이터를 안전하고 일관되게 공유하기 위한 기반을 제공합니다.
+</p>
+<table>
+<thead>
+<tr>
+<th>구조체 명</th>
+<th>역할 및 설명</th>
+</tr>
+<ead></ead>
+<tbody>
+<tr>
+<td><code>Flags</code></td>
+<td>로봇 연결, 서보 제어, FT 센서, 공압 제어 등 각 기능의 활성화/비활성화 상태를 관리하는 플래그 집합입니다. 
+    <br>멀티스레드 환경에서 안전한 상태 전환을 보장합니다.</td>
+</tr>
+<tr>
+<td><code>Setting</code></td>
+<td>목표 힘, 목표 속도, 힘 제한, 제어 주기 등 사용자가 설정하거나 시스템 내부에서 사용되는 제어 파라미터를 저장합니다. 
+    <br>대부분의 멤버는 <code>std::atomic</code>으로 선언되어 스레드 간 안전한 접근이 가능합니다.</td>
+</tr>
+<tr>
+<td><code>ServoControlData</code></td>
+<td>평면 및 곡면 경로 구동에 필요한 위치, 속도, 가속도 목표값과 공유 명령 변수를 저장합니다.</td>
+</tr>
+<tr>
+<td><code>LogData</code></td>
+<td>로봇의 상태 및 각종 센서 데이터를 파일로 일괄 저장하기 위한 고정 크기 배열입니다.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Flags 구조체</strong></p>
+<p>시스템 내 각 핵심 기능(로봇 연결, 서보 제어, FT 센서, 공압 제어 등)의 활성화 또는 비활성화 상태를 관리하는 플래그를 포함하며,
+    멀티스레드 환경에서 안정적인 상태 전환을 지원합니다.</p>
+<table>
+    <thead>
+        <tr>
+            <th>필드 이름</th>
+            <th>타입</th>
+            <th>기능 설명</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><code>realtimeConnected</code></td>
+            <td><code>std::atomic&lt;bool&gt;</code></td>
+            <td>로봇과의 네트워크 연결 여부</td>
+        </tr>
+        <tr>
+            <td><code>servoRunning</code></td>
+            <td><code>std::atomic&lt;bool&gt;</code></td>
+            <td>서보 제어 스레드 활성화 여부</td>
+        </tr>
+        <tr>
+            <td><code>ftRunning</code></td>
+            <td><code>std::atomic&lt;bool&gt;</code></td>
+            <td>FT 센서 수집 스레드 활성화 여부</td>
+        </tr>
+        <tr>
+            <td><code>robotRunning</code></td>
+            <td><code>std::atomic&lt;bool&gt;</code></td>
+            <td>로봇 구동(힘 제어) 스레드 활성화 여부</td>
+        </tr>
+        <tr>
+            <td><code>airTask</code></td>
+            <td><code>std::atomic&lt;bool&gt;</code></td>
+            <td>공압 제어 Task 활성화 여부</td>
+        </tr>
+        <tr>
+            <td><code>airRunning</code></td>
+            <td><code>std::atomic&lt;bool&gt;</code></td>
+            <td>공압 제어 루프 실행 여부</td>
+        </tr>
+        <tr>
+            <td><code>logThreadRunning</code></td>
+            <td><code>std::atomic&lt;bool&gt;</code></td>
+            <td>로깅 스레드 활성화 여부</td>
+        </tr>
+        <tr>
+            <td><code>loadTraj</code></td>
+            <td><code>std::atomic&lt;bool&gt;</code></td>
+            <td>경로 불러오기 모드 (<code>false</code>=평면, <code>true</code> = 곡면)</td>
+        </tr>
+        <tr>
+            <td><code>flat_stop</code>, <code>curve_stop</code></td>
+            <td><code>std::atomic&lt;bool&gt;</code></td>
+            <td>평면/곡면 구동 종료 요청 플래그</td>
+        </tr>
+    </tbody>
+</table>
+
+<p><strong>Setting 구조체</strong></p>
+<p>폴리싱 로봇의 제어를 위한 목표 힘, 속도, 힘 제한 등 사용자 또는 시스템 내부에서 정의한 다양한 제어 파라미터를 저장하고 관리하는 역할을 수행합니다.</p>
+<table>
+    <thead>
+        <tr>
+            <th>필드 이름</th>
+            <th>타입</th>
+            <th>기능 설명</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><code>Force_limit_N</code></td>
+            <td><code>std::atomic&lt;float&gt;</code></td>
+            <td>최대 허용 힘 [N]</td>
+        </tr>
+        <tr>
+            <td><code>Target_Force_N</code></td>
+            <td><code>std::atomic&lt;float&gt;</code></td>
+            <td>목표 힘 [N]</td>
+        </tr>
+        <tr>
+            <td><code>Target_vz</code></td>
+            <td><code>std::atomic&lt;float&gt;</code></td>
+            <td>목표 Z축 속도 [mm/s]</td>
+        </tr>
+        <tr>
+            <td><code>vx_mms</code>,<code>vy_mms</code>,<code>vz_mms</code></td>
+            <td><code>std::atomic&lt;float&gt;</code></td>
+            <td>X/Y/Z 축 명령 속도 [mm/s]</td>
+        </tr>
+        <tr>
+            <td><code>x_pos_bound</code></td>
+            <td><code>std::atomic&lt;float,2&gt;</code></td>
+            <td>평면 구동 시 X축 시작/종료 위치 [mm]</td>
+        </tr>
+        <tr>
+            <td><code>Contact_time</code></td>
+            <td><code>std::atomic&lt;float&gt;</code></td>
+            <td>접촉 유지 시간 [s]</td>
+        </tr>
+        <tr>
+            <td><code>set_Hz</code></td>
+            <td><code>std::atomic&lt;float&gt;</code></td>
+            <td>전체 제어 루프 주기 [Hz]</td>
+        </tr>
+        <tr>
+            <td><code>set_Hz_servo</code></td>
+            <td><code>std::atomic&lt;float&gt;</code></td>
+            <td>서보 제어 주기 [Hz]</td>
+        </tr>
+        <tr>
+            <td><code>Control_Step</code></td>
+            <td><code>int</code></td>
+            <td>평면 구동 시 제어 단계 카운터</td>
+        </tr>
+        <tr>
+            <td><code>First_Contact</code></td>
+            <td><code>std::atomic&lt;bool&gt;</code></td>
+            <td>평면 구동 첫 접촉 여부 확인용</td>
+        </tr>
+    </tbody>
+</table>
+
+<h4>5.1.2. 주요 메서드 및 이벤트 핸들러</h4>
+<p>이 클래스는 사용자의 상호작용에 응답하고, 이에 따른 백그라운드 작업을 관리하는 다양한 메서드와 이벤트 핸들러를 포함합니다.
+    GUI의 버튼 클릭과 같은 이벤트는 특정 기능을 수행하는 스레드를 시작하거나 제어 로직을 실행하는 핸들러에 연결됩니다.</p>
+<p><strong>버튼 이벤트</strong></p>
+<p>사용자가 GUI에서 버튼을 클릭할 때 직접 호출되는 이벤트 핸들러입니다.
+    각 함수는 '로봇 연결', '경로 로드', '작업 시작' 등 명확한 단일 기능을 수행하며, 관련 제어 스레드를 시작하거나 시스템 상태를 변경하는 역할을 담당합니다.</p>
+<table>
+<thead>
+<tr>
+<th>메서드명</th>
+<th>기능 설명</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>OnBnClickedButRobotConnect()</code></td>
+<td>"1. 제어기 연결" 버튼 클릭 시 호출. TCP/IP 및 UDP 리얼타임 채널을 연결하고 서보 온(Servo On) 상태로 전환합니다.</td>
+</tr>
+<tr>
+    <td><code>OnBnClickedButRobotDisconnect()</code></td>
+    <td>"연결 종료" 버튼 클릭 시 실시간 채널 및 스레드를 안전하게 종료시킵니다.</td>
+</tr>
+<tr>
+<td><code>OnBnClickedButLoadTrajFlat()</code> / <code>OnBnClickedButLoadTrajCurve()</code></td>
+<td>"평면/곡면 경로" 버튼 클릭 시 해당 경로 파일을 로드하고, 경로 구동을 위한 플래그를 설정합니다.</td>
+</tr>
+<tr>
+    <td><code>OnBnClickedButHomeInit()</code></td>
+    <td>"2. 초기 자세 재조정" 버튼 클릭 시 로봇 홈 위치를 초기화 합니다.</td>
+</tr>
+<tr>
+    <td><code>OnBnClickedButHomeMove()</code></td>
+    <td>"3. 초기 위치 이동" 버튼 클릭 시 지정된 홈 위치로 이동합니다.</td>
+</tr>
+<tr>
+    <td><code>OnBnClickedButServo()</code></td>
+    <td>"4. 서보 제어" 버튼 클릭 시 서보 제어 스레드를 시작합니다.</td>
+</tr>
+<tr>
+    <td><code>OnBnClickedButFTSensorOn()</code></td>
+    <td>"FT 센서 연결" 버튼 클릭 시 센서 연결, 초기 바이어스 제거 및 센서값 수신 스레드를 시작합니다.</td>
+</tr>
+<tr>
+    <td><code>OnBnClickedButAirOn()</code></td>
+    <td>"공압 연결" 버튼 클릭 시 공압 연결 및 공압 신호 송신 스레드를 시작합니다.</td>
+</tr>
+<tr>
+    <td><code>OnBnClickedButForceControl()</code></td>
+    <td>"5. 경로 구동" 버튼 클릭 시 FT·공압 스레드 자동 연결 및 평면/곡면 구동 스레드를 시작합니다.</td>
+</tr>
+<tr>
+<td><code>OnBnClickedButRobotStop()</code></td>
+<td>"구동 종료" 버튼 클릭 시 경로 구동 플래그 해제 및 모든 제어 스레드를 안전하게 종료합니다.</td>
+</tr>
+<tr>
+<td><code>OnBnClickedButTcpip()</code></td>
+<td>"TCP/IP 통신 연결" 버튼 클릭 시 TCP/IP 통신 연결 및 메세지를 수신합니다<div class=""></div></td>
+</tr>
+<tr>
+<td><code>OnBnClickedButTcpsend()</code></td>
+<td>"TCP/IP 메세지 전송" 버튼 클릭 시 TCP/IP 통신을 통해 메세지를 송신합니다.</td>
+</tr>
+</tbody>
+</table>
+
+<p><strong>타이머 이벤트</strong></p>
+<p>일정한 시간 간격으로 시스템의 상태를 확인하고 사용자 인터페이스를 갱신하는 역할을 담당합니다.
+    이 이벤트를 통해 로봇의 현재 위치나 센서 값과 같은 실시간 정보를 GUI에 지속적으로 표시하여 사용자에게 현재 상태를 시각적으로 전달합니다.</p>
+<table>
+    <tbody>
+        <thead>
+            <tr>
+                <th>메서드명</th>
+                <th>기능 설명</th>
+            </tr>
+        </thead>
+        <tr>
+            <td><code>OnTimer()</code></td>
+            <td>주기적으로 호출되어 <code>UpdateGUI()</code> 함수를 통해 화면의 각종 데이터(로봇 위치, 힘, 토크 등)를 갱신하고 그래프를 다시 그립니다.</td>
+        </tr>
+    </tbody>
+</table>
+</tr>
+
+<p><strong>관리 함수</strong></p>
+<p>백그라운드에서 실행되는 여러 스레드(서보 제어, FT 센서 데이터 수집, 공압 제어 등)를 안전하게 시작하거나 종료하고, 상태 플래그를 관리하는 기능을 수행합니다.</p>
+<table>
+    <tbody>
+        <thead>
+            <tr>
+                <th>메서드명</th>
+                <th>기능 설명</th>
+            </tr>
+        </thead>
+        <tr>
+            <td><code>StartServoThread()</code></td>
+            <td>RT-UDP 연결 확인 후 상태를 <code>true</code>로 변환 후 서보 스레드를 시작합니다. 실패 시 플래그를 <code>false</code>로 복원합니다.</td>
+        </tr>
+        <tr>
+            <td><code>StartFTThread()</code></td>
+            <td>상태를 <code>true</code>로 변환 후 FT 센서 수집 스레드를 시작합니다. 실패 시 플래그를 <code>false</code>로 복원합니다.</td>
+        </tr>        
+        <tr>
+            <td><code>StartAirThread()</code></td>
+            <td>상태를 <code>true</code>로 변환 후 공압 송신 스레드를 시작합니다. 실패 시 플래그를 <code>false</code>로 복원합니다.</td>
+        </tr>        
+        <tr>
+            <td><code>StartContactThread_Flat()</code></td>
+            <td>상태를 <code>true</code>로 변환 후 평면 경로 구동 스레드를 시작합니다. 실패 시 플래그를 <code>false</code>로 복원합니다.</td>
+        </tr>        
+        <tr>
+            <td><code>StartContactThread_Curve()</code></td>
+            <td>상태를 <code>true</code>로 변환 후 곡면 경로 구동 스레드를 시작합니다. 실패 시 플래그를 <code>false</code>로 복원합니다.</td>
+        </tr>
+        <tr>
+            <td><code>QuitAllThreads()</code></td>
+            <td>실행 중인 모든 백그라운드 스레드에 안전한 종료를 요청하고, 완료될 때까지 대기합니다.</td>
+            </tr>
+    </tbody>
+</table>
+
+
+<h3 id="section-dev-guide-ft">5.2. FT 센서 제어 모듈</h3>
+<p>FT(Force/Torque) 센서와의 통신 및 데이터 처리는 <code>FTSensorFunction</code>과 <code>FTState</code> 두 클래스를 통해 이루어집니다.</p>
+<h4>5.2.1. <code>FTSensorFunction</code> 클래스</h4>
+<p>이 클래스는 FT 센서 디바이스와의 저수준 통신을 담당합니다. CAN 소켓 초기화, 메시지 수신 및 해석, 자원 해제 등의 기능을 캡슐화합니다.</p>
+<p><strong>디바이스 초기화</strong></p>
+<p>FT 센서와의 저수준 통신을 위한 CAN 소켓을 설정하고, 디바이스를 초기화하며 연결을 준비하는 역할을 담당합니다.</p>
+<table>
+    <thead>
+        <tr>
+            <th>메서드명</th>
+            <th>기능 설명</th>
+        </tr>
+        <tbody>
+            <tr>
+                <td><code>SelectDevice()</code></td>
+                <td>사용자 선택 기반 FT 센서 디바이스를 열고 BAL 오브젝트를 획득합니다.</td>
+            </tr>
+            <tr>
+                <td><code>CheckBalFeatures()</code></td>
+                <td>지정한 컨트롤 번호의 CAN 버스 소켓 지원 여부를 확인합니다.</td>
+            </tr>
+            <tr>
+                <td><code>InitSocket()</code></td>
+                <td>CAN 통신을 위한 소켓을 열고 채널을 초기화합니다.</td>
+            </tr>
+        </tbody>
+    </thead>
+</table>
+
+<p><strong>데이터 처리</strong></p>
+<p>FT 센서로부터 수신된 원시 데이터를 파싱하여 실질적인 힘과 토크 값으로 변환한 후, 상태 객체에 저장하는 데이터 변환 기능을 수행합니다.</p>
+<table>
+    <thead>
+        <tr>
+            <th>메서드명</th>
+            <th>기능 설명</th>
+        </tr>
+        <tbody>
+            <tr>
+                <td><code>ProcessMessage()</code></td>
+                <td>CAN 버스에서 메세지를 읽어와 <code>PrintMessage</code>로 전달합니다.</td>
+            </tr>
+            <tr>
+                <td><code>PrintMessage()</code></td>
+                <td>수신된 CAN 메시지를 파싱하여 실제 힘/토크 값으로 변환하고, 이 값을 <code>FTState</code> 객체에 저장합니다.</td>
+            </tr>
+        </tbody>
+    </thead>
+</table>
+
+<p><strong>상태 접근</strong></p>
+<p>FT 센서에서 얻은 데이터를 외부에서 접근할 수 있도록 인터페이스를 제공하여 실시간 상태 조회 및 데이터 활용을 지원합니다.</p>
+<table>
+    <thead>
+        <tr>
+            <th>메서드명</th>
+            <th>기능 설명</th>
+        </tr>
+        <tbody>
+            <tr>
+                <td><code>getState()</code></td>
+                <td>내부 <code>FTState</code> 객체에 대한 읽기·쓰기 접근을 제공합니다.</td>
+            </tr>
+            <tr>
+                <td><code>getSnapshot()</code></td>
+                <td><code>FTState</code>의 스냅샷 복사본을 반환합니다.</td>
+            </tr>
+        </tbody>
+    </thead>
+</table>
+
+<p><strong>자원 해제</strong></p>
+<p>FT 센서 통신에 사용된 하드웨어 및 소프트웨어 리소스를 안전하게 해제하고 시스템에 반환하는 역할을 수행합니다.</p>
+<table>
+    <thead>
+        <tr>
+            <th>메서드명</th>
+            <th>기능 설명</th>
+        </tr>
+        <tbody>
+            <tr>
+                <td><code>Release()</code></td>
+                <td>사용이 끝난 모든 COM 리소스를 안전하게 해제합니다.</td>
+                </tr>
+        </tbody>
+    </thead>
+</table>
+
+
+<h4>5.2.2. <code>FTState</code> 클래스</h4>
+<p>이 클래스는 FT 센서로부터 수신된 데이터를 스레드 안전(thread-safe) 방식으로 관리하는 상태 관리자입니다. 원시 데이터, 바이어스(bias) 처리된 데이터, 필터링된 데이터를 모두 저장하고 관리합니다.</p>
+
+<p><strong>초기화</strong></p>
+<p>FT 센서 데이터 처리에 필요한 모든 내부 상태(원시 데이터, 바이어스 데이터, 필터링된 데이터 등)를 0으로 초기화하여 데이터 처리의 정확성을 보장합니다.</p>
+<table>
+    <thead>
+        <tr>
+            <th>메서드명</th>
+            <th>기능 설명</th>
+        </tr>
+        <tbody>
+            <tr>
+                <td><code>clearAll()</code></td>
+                <td>모든 내부 배열(원시·바이어스·베이스·필터링 등)을 0으로 초기화합니다.</td>
+            </tr>
+        </tbody>
+    </thead>
+</table>
+
+<p><strong>Getter 함수</strong></p>
+<p>FT 센서로부터 얻은 힘 및 토크 데이터를 원시, 바이어스 적용, 필터링 적용 등 다양한 형태로 제공하는 접근자 메서드입니다.</p>
+<table>
+    <thead>
+        <tr>
+            <th>메서드명</th>
+            <th>기능 설명</th>
+        </tr>
+        <tbody>
+            <tr>
+                <td><code>getSensorForce()</code></td>
+                <td>센서에서 측정된 원시 힘 값을 반환합니다.</td>
+            </tr>
+            <tr>
+                <td><code>getSensorTorque()</code></td>
+                <td>센서에서 측정된 원시 토크 값을 반환합니다.</td>
+            </tr>
+            <tr>
+                <td><code>getRawForce()</code></td>
+                <td>CAN 메세지로부터 변환된 원시 힘 값을 반환합니다.</td>
+            </tr>
+            <tr>
+                <td><code>getRawTorque()</code></td>
+                <td>CAN 메세지로부터 변환된 원시 토크 값을 반환합니다.</td>
+            </tr>
+            <tr>
+                <td><code>getBiasForce()</code></td>
+                <td>계산된 바이어스 힘 값을 반환합니다.</td>
+            </tr>
+            <tr>
+                <td><code>getBiasTorque()</code></td>
+                <td>계산된 바이어스 토크 값을 반환합니다.</td>
+            </tr>
+            <tr>
+                <td><code>getBiasSumForce()</code></td>
+                <td>힘에 대한 바이어스 합산 값을 반환합니다.</td>
+            </tr>
+            <tr>
+                <td><code>getBiasSumTorque()</code></td>
+                <td>토크에 대한 바이어스 합산 값을 반환합니다.</td>
+            </tr>
+            <tr>
+                <td><code>getBiasedForce()</code></td>
+                <td>원시 힘 값에서 바이어스를 제거한 후 반환합니다.</td>
+            </tr>
+            <tr>
+                <td><code>getBiasedTorque()</code></td>
+                <td>원시 토크 값에서 바이어스를 제거한 후 반환합니다.</td>
+            </tr>
+            <tr>
+                <td><code>getForceBase()</code></td>
+                <td>로봇 베이스 좌표계 기준 바이어스값 제거 및 필터링한 힘 값을 반환합니다.</td>
+            </tr>
+            <tr>
+                <td><code>getTorqueBase()</code></td>
+                <td>로봇 베이스 좌표계 기준 바이어스값 제거 및 필터링한 토크 값을 반환합니다.</td>
+            </tr>
+            <tr>
+                <td><code>getFilteredForce()</code></td>
+                <td>저역 통과 필터를 적용한 힘 값을 반환합니다.</td>
+            </tr>
+            <tr>
+                <td><code>getFilteredTorque()</code></td>
+                <td>저역 통과 필터를 적용한 토크 값을 반환합니다.</td>
+            </tr>
+        </tbody>
+    </thead>
+</table>
+
+<p><strong>Setter 함수</strong></p>
+<p>외부에서 입력된 데이터를 내부 상태로 저장하여 FT 센서의 데이터 관리에 필요한 상태 업데이트를 수행하는 설정 메서드 입니다.</p>
+<table>
+    <thead>
+        <tr>
+            <th>메서드명</th>
+            <th>기능 설명</th>
+        </tr>
+        <tbody>
+            <tr>
+                <td><code>setAll_FT_cal()</code></td>
+                <td>바이어스·베이스·필터링 된 힘·토크 값을 일괄적으로 설정합니다.</td>
+            </tr>
+            <tr>
+                <td><code>setSensorForce()</code></td>
+                <td>센서에서 측정된 원시 힘 값을 설정합니다.</td>
+            </tr>
+            <tr>
+                <td><code>setSensorTorque()</code></td>
+                <td>센서에서 측정된 원시 토크 값을 설정합니다.</td>
+            </tr>
+            <tr>
+                <td><code>setRawForce()</code></td>
+                <td>CAN 메세지로부터 변환된 원시 힘 값을 설정합니다.</td>
+            </tr>
+            <tr>
+                <td><code>setRawTorque()</code></td>
+                <td>CAN 메세지로부터 변환된 원시 토크 값을 설정합니다.</td>
+            </tr>
+            <tr>
+                <td><code>setBiasForce()</code></td>
+                <td>계산된 바이어스 힘 값을 설정합니다.</td>
+            </tr>
+            <tr>
+                <td><code>setBiasTorque()</code></td>
+                <td>계산된 바이어스 토크 값을 설정합니다.</td>
+            </tr>
+            <tr>
+                <td><code>setBiasSumForce()</code></td>
+                <td>힘에 대한 바이어스 합산 값을 설정합니다.</td>
+            </tr>
+            <tr>
+                <td><code>setBiasSumTorque()</code></td>
+                <td>토크에 대한 바이어스 합산 값을 설정합니다.</td>
+            </tr>
+            <tr>
+                <td><code>setBiasedForce()</code></td>
+                <td>원시 힘 값에서 바이어스를 제거한 후 설정합니다.</td>
+            </tr>
+            <tr>
+                <td><code>setBiasedTorque()</code></td>
+                <td>원시 토크 값에서 바이어스를 제거한 후 설정합니다.</td>
+            </tr>
+            <tr>
+                <td><code>setForceBase()</code></td>
+                <td>로봇 베이스 좌표계 기준 바이어스값 제거 및 필터링한 힘 값을 설정합니다.</td>
+            </tr>
+            <tr>
+                <td><code>setTorqueBase()</code></td>
+                <td>로봇 베이스 좌표계 기준 바이어스값 제거 및 필터링한 토크 값을 설정합니다.</td>
+            </tr>
+            <tr>
+                <td><code>setFilteredForce()</code></td>
+                <td>저역 통과 필터를 적용한 힘 값을 설정합니다.</td>
+            </tr>
+            <tr>
+                <td><code>setFilteredTorque()</code></td>
+                <td>저역 통과 필터를 적용한 토크 값을 설정합니다.</td>
+            </tr>
+        </tbody>
+    </thead>
+</table>
+
+<p><strong>Bias 관리</strong></p>
+<p>FT 센서 데이터 처리 과정에서 발생하는 바이어스를 누적하여 관리하고, 이를 기반으로 정확한 측정을 위한 평균 바이어스를 계산합니다.</p>
+<table>
+    <thead>
+        <tr>
+            <th>메서드명</th>
+            <th>기능 설명</th>
+        </tr>
+        <tbody>
+            <tr>
+                <td><code>addBiasSumForce()</code></td>
+                <td>바이어스가 합산된 힘 값에 <code>val</code>을 누적합니다.</td>
+            </tr>
+            <tr>
+                <td><code>addBiasSumTorque()</code></td>
+                <td>바이어스가 합산된 토크 값에 <code>val</code>을 누적합니다.</td>
+            </tr>
+            <tr>
+                <td><code>resetBiasSum()</code></td>
+                <td>바이어스 합산 값을 초기화 합니다.</td>
+            </tr>
+            <tr>
+                <td><code>updateBiasAverage()</code></td>
+                <td>합산된 값을 카운트로 나누어 평균 바이어스를 계산합니다.</td>
+            </tr>
+        </tbody>
+    </thead>
+</table>
+
+<p><strong>스냅샷</strong></p>
+<p>특정 시점의 FT 센서 상태 데이터를 복사하여 다른 프로세스나 스레드에서 안전하게 사용할 수 있도록 지원하는 기능을 제공합니다.</p>
+<table>
+    <thead>
+        <tr>
+            <th>메서드명</th>
+            <th>기능 설명</th>
+        </tr>
+        <tbody>
+            <tr>
+                <td><code>updateSnapshot()</code></td>
+                <td>현재 바이어스·베이스·필터링 데이터를 <code>Snapshot</code>에 저장 및 반환합니다.</td>
+            </tr>
+            <tr>
+                <td><code>getSnapshot()</code></td>
+                <td>마지막에 생성된 <code> Snapshot</code>의 복사본을 반환합니다.</td>
+            </tr>
+        </tbody>
+    </thead>
+</table>
+
+<h3 id="section-dev-guide-air">5.3. 공압 제어 모듈</h3>
+<p>공압 제어는 <code>AirControl</code> 클래스를 통해 NI-DAQmx 라이브러리를 사용하여 이루어집니다.</p>
+<h4>5.3.1. <code>AirControl</code> 클래스</h4>
+<p>이 클래스는 DAQ 보드의 아날로그 출력(AO) 채널을 제어하여 비례압력레귤레이터에 전압 신호를 보냄으로써 Chamber와 Spindle의 공압을 조절합니다.</p>
+<p><strong>초기화 및 리소스 관리</strong></p>
+<p>이 범주는 <code>AirControl</code> 객체의 생명주기와 관련된 기능을 포함하며, DAQ 하드웨어 자원을 설정하고 해제하는 역할을 담당합니다.</p>
+<table>
+    <thead>
+        <tr>
+            <th>메서드명</th>
+            <th>기능 설명</th>
+        </tr>
+        <tbody>
+            <tr>
+                <td><code>AirControl()</code></td>
+                <td>객체 생성 시 멤버 변수를 초기화하는 기본 생성자입니다.</td>
+            </tr>
+            <tr>
+                <td><code>~AirControl()</code></td>
+                <td>객체가 소멸될 때 <code>releaseTasks()</code>를 자동으로 호출하여 모든 DAQ 태스크 관련 리소스를 안전하게 해제합니다.</td>
+            </tr>
+            <tr>
+                <td><code>initTasks()</code></td>
+                <td><code>NI-DAQmx</code> 태스크를 생성하고, <code>Chamber</code>와 <code>Spindle</code>제어를 위한 아날로그 출력(AO) 전압 채널을 설정한 뒤 태스크를 시작합니다.<br>
+                초기화 실패 시 관련 리소스를 정리하고 에러를 처리합니다.</td>
+            </tr>
+            <tr>
+                <td><code>releaseTasks()</code></td>
+                <td>실행 중인 모든 DAQ 태스크(<code>Chamber</code>, <code>Spindle</code>)를 정지하고 관련 리소스를 시스템에 반환합니다.</td>
+            </tr>
+            <tr>
+                <td><code>isInitialized()</code></td>
+                <td><code>Chamber</code> 및 <code>Spindle</code> 제어용 태스크 핸들이 유효하게 생성되었는지 확인하여, 모듈의 초기화 성공 여부를 반환합니다.</td>
+            </tr>
+        </tbody>
+    </thead>
+</table>
+
+<p><strong>주요 인터페이스</strong></p>
+<p>실질적인 공압 제어를 위해 외부에서 직접 호출하는 핵심 함수들입니다. 
+    목표 압력을 설정하고, 이를 실제 물리적인 출력으로 변환하는 기능을 포함합니다.</p>
+<table>
+    <thead>
+        <tr>
+            <th>메서드명</th>
+            <th>기능 설명</th>
+        </tr>
+        <tbody>
+            <tr>
+                <td><code>setupAoTask()</code></td>
+                <td>AO 태스크를 설정하는 헬퍼 함수입니다.<br>
+                AO 태스크를 생성한 뒤 채널을 추가하고 시작합니다.</td>
+            </tr>
+            <tr>
+                <td><code>setupAiTask()</code></td>
+                <td>AI 태스크를 설정하는 헬퍼 함수입니다.<br>
+                AO 태스크를 생성한 뒤 채널을 추가하고 샘플링 타이밍을 설정합니다.<br>
+                (콜백 방식으로 구현되어 있습니다.)</td>
+            </tr>
+            <tr>
+                <td><code>EveryNCallback()</code></td>
+                <td>AI 태스크를 통해 <code>Chamber</code>와 <code>Spindle</code>의 값을 수신하는 콜백 함수입니다.<br>
+                공압 태스크 동작 과정에서 <code>Chamber</code>와 <code>Spindle</code>의 전압과 공압을 비례압력 레귤레이터로부터 수신합니다.</td>
+            </tr>
+            <tr>
+                <td><code>checkDaqError()</code></td>
+                <td>공압 태스크에 대한 에러를 검사하는 헬퍼 함수입니다.<br>
+                에러 발생 시 공압의 모든 태스크를 즉시 정리하게 됩니다.</td>
+            </tr>
+            <tr>
+                <td><code>setDesiredChamberPressure()</code></td>
+                <td><code>Chamber</code>의 목표 압력(<code>MPa</code>)을 설정합니다.<br>
+                입력값은 <code>kMaxChamberPressureMPa</code> 상수에 의해 정의된 물리적 최대 한계 내로 자동 클램핑 됩니다.</td>
+            </tr>
+            <tr>
+                <td><code>setDesiredSpindlePressure()</code></td>
+                <td><code>Spindle</code>의 목표 압력(<code>MPa</code>)을 설정합니다.<br>
+                입력값은 <code>kMaxSpindlePressureMPa</code> 상수에 의해 정의된 물리적 최대 한계 내로 자동 클램핑 됩니다.</td>
+            </tr>
+            <tr>
+                <td><code>updateOutputs()</code></td>
+                <td>주기적으로 호출되는 메인 제어 루프 함수입니다.<br>
+                <code>m_desired...</code> 변수에 저장된 목표 압력값을 읽어와 선형 변환을 통해 필요한 전압 값으로 계산하고,
+            DAQ 보드의 아날로그 채널로 출력합니다.</td>
+            </tr>
+        </tbody>
+    </thead>
+</table>
+
+<p><strong>상태 및 데이터 조회</strong></p>
+<p>모듈의 현재 설정값이나 마지막 출력 상태를 외부에서 안전하게 읽어갈 수 있도록 지원하는 접근자(<code>getter</code>) 함수들입니다.</p>
+<table>
+    <thead>
+        <tr>
+            <th>메서드명</th>
+            <th>기능 설명</th>
+        </tr>
+        <tbody>
+            <tr>
+                <td><code>desiredChamberPressure()</code></td>
+                <td>현재 설정된 Chamber의 목표 압력 값을 조회합니다.</td>
+            </tr>
+            <tr>
+                <td><code>desiredSpindlePressure()</code></td>
+                <td>현재 설정된 Spindle의 목표 압력 값을 조회합니다.</td>
+            </tr>
+            <tr>
+                <td><code>sendChamberVoltage()</code></td>
+                <td>비례압력 레귤레이터로 보낼 Chamber 제어용 전압 값(<code>V</code>)</td>
+            </tr>
+            <tr>
+                <td><code>sendSpindleVoltage()</code></td>
+                <td>비례압력 레귤레이터로 보낼 Spindle 제어용 전압 값(<code>V</code>)</td>
+            </tr>
+            <tr>
+                <td><code>sendChamberPressure()</code></td>
+                <td>비례압력 레귤레이터로 보낼 Chamber 제어용 압력 값(<code>MPa</code>)</td>
+            </tr>
+            <tr>
+                <td><code>sendSpindlePressure()</code></td>
+                <td>비례압력 레귤레이터로 보낼 Spindle 제어용 압력 값(<code>MPa</code>)</td>
+            </tr>
+
+            <tr>
+                <td><code>feedbackChamberVoltage()</code></td>
+                <td>비례압력 레귤레이터로부터 받은 Chamber 제어용 전압 값(<code>V</code>)</td>
+            </tr>
+            <tr>
+                <td><code>feedbackSpindleVoltage()</code></td>
+                <td>비례압력 레귤레이터로부터 받은 Spindle 제어용 전압 값(<code>V</code>)</td>
+            </tr>
+            <tr>
+                <td><code>feedbackChamberPressure()</code></td>
+                <td>비례압력 레귤레이터로부터 받은 Chamber 제어용 압력 값(<code>MPa</code>)</td>
+            </tr>
+            <tr>
+                <td><code>feedbackSpindlePressure()</code></td>
+                <td>비례압력 레귤레이터로부터 받은 Spindle 제어용 압력 값(<code>MPa</code>)</td>
+            </tr>
+        </tbody>
+    </thead>
+</table>
+
+<p><strong>주요 속성 및 상수</strong></p>
+<p>클래스 내부에서 사용되는 중요한 데이터 멤버와 시스템의 물리적 한계를 정의하는 상수들입니다.
+    <code>Config</code>구조체 내부에 관련 파라미터를 정의합니다.</p>
+<table>
+    <thead>
+        <tr>
+            <th>메서드명</th>
+            <th>기능 설명</th>
+        </tr>
+        <tbody>
+            <tr>
+                <td><code>deviceName</code></td>
+                <td>Ni_DAQ 장치 이름</td>
+            </tr>
+            <tr>
+                <td><code>aoTaskName</code>, <code>aiTaskName</code></td>
+                <td><code>AO</code> 및 <code>AI</code> 태스크 이름</td>
+            </tr>
+            <tr>
+                <td><code>aoPhysicalChannels</code>, <code>aiPhysicalChannels</code></td>
+                <td>물리 채널 목록</td>
+            </tr>
+            <tr>
+                <td><code>aoChannelNames</code>, <code>aiChannelNames</code></td>
+                <td>가상 채널 이름 목록</td>
+            </tr>
+            <tr>
+                <td><code>maxVoltage</code></td>
+                <td>최대 전압 설정 (<code>V</code>)</td>
+            </tr>
+            <tr>
+                <td><code>maxChamberPressureMPa</code>, <code>maxSpindlePressureMPa</code></td>
+                <td><code>Chamber</code>와 <code>Spindle</code>에 대한 최대 공압 값 (<code>MPa</code>)</td>
+            </tr>
+            <tr>
+                <td><code>sampleRateHz</code>, <code>samplesPerCallback</code></td>
+                <td>DAQ 보드의 샘플링 및 콜백 설정</td>
+            </tr>
+            <tr>
+                <td><code>m_aoTask</code></td>
+                <td><code>Chamber</code>와 <code>Spindle</code>의 아날로그 출력(AO) 태스크를 관리하는 핸들 변수입니다.</td>
+            </tr>
+            <tr>
+                <td><code>m_aiTask</code></td>
+                <td><code>Chamber</code>와 <code>Spindle</code>의 아날로그 입력(AI) 태스크를 관리하는 핸들 변수입니다.</td>
+            </tr>
+            <tr>
+                <td><code>m_desiredChamber</code>,<br><code>m_desiredSpindle</code></td>
+                <td><code>setDesired...</code> 함수를 통해 설정된 목표 압력(<code>MPa</code>)을 저장하는 <code>std::atomic&lt;double&gt;</code>타입의 멤버 변수입니다.</td>
+            </tr>
+            <tr>
+                <td><code>m_totalSamplesRead</code>,<br><code>m_startTime</code></td>
+                <td>총 읽은 샘플 수 및 공압 태스크 시작 시간</td>
+            </tr>
+            <tr>
+                <td><code>m_sendVoltChamber</code>,<br><code>m_sendVoltSpindle</code></td>
+                <td>비례압력 레귤레이터로 출력할 전압 값(<code>V</code>)을 저장하는 <code>std::atomic&lt;double&gt;</code>타입의 멤버 변수입니다.</td>
+            </tr>
+            <tr>
+                <td><code>m_sendPressChamber</code>,<br><code>m_sendPressSpindle</code></td>
+                <td>비례압력 레귤레이터로 출력할 압력 값(<code>MPa</code>)을 저장하는 <code>std::atomic&lt;double&gt;</code>타입의 멤버 변수입니다.</td>
+            </tr>
+            <tr>
+                <td><code>m_feedbackVoltChamber</code>,<br><code>m_feedbackVoltSpindle</code></td>
+                <td>비례압력 레귤레이터로부터 입력된 전압 값(<code>V</code>)을 저장하는 <code>std::atomic&lt;double&gt;</code>타입의 멤버 변수입니다.</td>
+            </tr>
+            <tr>
+                <td><code>m_feedbackPressChamber</code>,<br><code>m_feedbackPressSpindle</code></td>
+                <td>비례압력 레귤레이터로부터 입력된 압력 값(<code>MPa</code>)을 저장하는 <code>std::atomic&lt;double&gt;</code>타입의 멤버 변수입니다.</td>
+            </tr>
+        </tbody>
+    </thead>
+</table>
+
+
+<h3 id="section-dev-guide-robot">5.4. 로봇 상태 및 궤적 관리</h3>
+<p>로봇의 실시간 상태 정보와 구동 경로는 각각 <code>RobotState</code>, <code>TrajectoryIO</code>, <code>VelProfile</code> 모듈에서 관리됩니다.
+<code>RobotState</code>는 로봇의 현재 동역학적 상태를 스레드에 안전하게 저장하고, 
+<code>TrajectoryIO</code>는 파일로부터 작업 경로를 읽어오는 역할을 담당합니다.
+<code>VelProfile</code>은 로봇의 초기 및 종료 구간에서의 상승 하강 시 부드러운 가감속을 위한 속도 프로파일 계산을 수행합니다.</p>
+<h4>5.4.1. <code>RobotState</code> 클래스</h4>
+<p>로봇의 현재 TCP/Flange/조인트 위치 및 속도, 명령 속도 등 로봇과 관련된 모든 상태 정보를 스레드 안전하게 저장하고 관리합니다. 
+    실시간 제어 루프와 GUI, 로깅 스레드가 동시에 같은 데이터를 읽고 쓰기 때문에 뮤텍스 기반 락 보호로 일관성을 확보합니다.</p>
+
+<p><strong>초기화 및 생명주기</strong></p>
+<p>객체 생성 및 리셋 시점에 내부 버퍼와 타임스탬프를 깨끗이 초기화하여, 런타임 메모리 오류 없이 제어 루프를 안정적으로 시작하고 종료할 수 있도록 지원합니다.</p>
+<table>
+    <thead>
+        <tr>
+            <th>메서드명</th>
+            <th>기능 설명</th>
+        </tr>
+        <tbody>
+            <tr>
+                <td><code>RobotState()</code>,<br><code>reset()</code></td>
+                <td>모든 내부 배열을 0으로 초기화하고, 타임스탬프·카운터를 리셋합니다.</td>
+            </tr>
+            <tr>
+                <td><code>VERSION</code>,<br><code>PERIOD_S</code>,<br><code>LOSS</code></td>
+                <td>펌웨어 버전, 제어 주기(초), 데이터 유실율 표시용 상수입니다.</td>
+            </tr>
+        </tbody>
+    </thead>
+</table>
+
+<p><strong>상태 업데이트 및 데이터 저장</strong></p>
+<p>로봇 컨트롤러로부터 수신한 실시간 데이터나 계산된 값을 클래스 내부에 저장하는 함수 그룹입니다. 전체 데이터를 한 번에 업데이트하거나, 특정 위치 정보를 저장하는 등의 역할을 수행합니다.</p>
+<table>
+    <thead>
+        <tr>
+            <th>메서드명</th>
+            <th>기능 설명</th>
+        </tr>
+        <tbody>
+            <tr>
+                <td><code>updateAllRawData()</code></td>
+                <td>로봇 컨트롤러로부터 수신한 TCP/Flange/조인트 위치, 속도, 명령 속도 등의 원시 데이터를 내부 버퍼에 한 번에 업데이트합니다.</td>
+            </tr>
+            <tr>
+                <td><code>saveInitialtcpPosition()</code>,<br><code>saveInitialflangePosition()</code>,<br><code>saveInitialjointPosition()</code></td>
+                <td>현재 로봇의 TCP/Flange/조인트 위치를 작업 시작을 위한 '초기 위치'로 저장합니다.</td>
+            </tr>
+            <tr>
+                <td><code>saveRelaxationtcpPosition()</code>,<br><code>saveRelaxationflangePosition()</code>,<br><code>saveRelaxationjointPosition()</code></td>
+                <td>현재 로봇의 TCP/Flange/조인트 위치를 '릴렉세이션 위치'로 저장합니다.</td>
+            </tr>
+            <tr>
+                <td><code>updatetcpPosRaw()</code>,<br><code>updateflangePosRaw()</code>,<br><code>updateJointAngRaw()</code>
+                    ,<br><code>updatetcpVelRaw()</code>,<br><code>updateflangeVelRaw()</code>,<br><code>updateJointVelRaw()</code></td>
+                <td>단일 배열 단위로 TCP와 Flange 및 조인트의 원시 위치와 속도값을 개별적으로 업데이트합니다.</td>
+            </tr>
+            <tr>
+                <td><code>updatetcpPosition()</code>,<br><code>updateflangePosition()</code>,<br><code>updateJointAngles()</code>,
+                    <code>updatetcpVelocity()</code>,<br><code>updateflangeVelocity()</code>,<br><code>updateJointVelocity()</code></td>
+                <td>단일 배열 단위로 TCP와 Flange 및 조인트의 위치와 속도값을 개별적으로 업데이트합니다.</td>
+            </tr>
+        </tbody>
+    </thead>
+</table>
+
+<p><strong>Getter 함수</strong></p>
+<p>클래스 내부에 저장된 로봇의 상태 정보를 직접 반환받거나, 특정 인덱스의 단일 값을 조회하는 함수 그룹입니다.</p>
+<table>
+    <thead>
+        <tr>
+            <th>메서드명</th>
+            <th>기능 설명</th>
+        </tr>
+        <tbody>
+            <tr>
+                <td><code>gettcpPositionArray()</code></td>
+                <td>내부에 저장된 TCP 위치 배열의 복사본을 반환합니다.</td>
+            </tr>
+            <tr>
+                <td><code>getflangePositionArray()</code></td>
+                <td>내부에 저장된 Flange 위치 배열의 복사본을 반환합니다.</td>
+            </tr>
+            <tr>
+                <td><code>getJointAngleArray()</code></td>
+                <td>내부에 저장된 관절 각도 배열의 복사본을 반환합니다.</td>
+            </tr>
+            <tr>
+                <td><code>gettcpVelocityArray()</code></td>
+                <td>내부에 저장된 TCP 속도 배열의 복사본을 반환합니다.</td>
+            </tr>
+            <tr>
+                <td><code>getflangeVelocityArray()</code></td>
+                <td>내부에 저장된 Flange 속도 배열의 복사본을 반환합니다.</td>
+            </tr>
+            <tr>
+                <td><code>getJointVelocityArray()</code></td>
+                <td>내부에 저장된 관절 각속도 배열의 복사본을 반환합니다.</td>
+            </tr>
+            <tr>
+                <td><code>getInitialtcpPositionArray()</code></td>
+                <td>내부에 저장된 TCP의 초기 위치 배열의 복사본을 반환합니다.</td>
+            </tr>
+            <tr>
+                <td><code>getInitialflangePositionArray()</code></td>
+                <td>내부에 저장된 Flnage의 초기 위치 배열의 복사본을 반환합니다.</td>
+            </tr>
+            <tr>
+                <td><code>getInitialJointAngleArray()</code></td>
+                <td>내부에 저장된 조인트의 초기 위치 배열의 복사본을 반환합니다.</td>
+            </tr>
+            <tr>
+                <td><code>getRelaxationtcpPositionArray()</code></td>
+                <td>내부에 저장된 TCP의 릴렉세이션 위치 배열의 복사본을 반환합니다.</td>
+            </tr>
+            <tr>
+                <td><code>getRelaxationflangePositionArray()</code></td>
+                <td>내부에 저장된 Flange의 릴렉세이션 위치 배열의 복사본을 반환합니다.</td>
+            </tr>
+            <tr>
+                <td><code>getRelaxationAngleArray()</code></td>
+                <td>내부에 저장된 조인트의 릴렉세이션 위치 배열의 복사본을 반환합니다.</td>
+            </tr>
+
+            <tr>
+                <td><code>gettcpPosition()</code></td>
+                <td>인덱스를 지정하여 단일 TCP 위치 값을 반환합니다.</td>
+            </tr>
+            <tr>
+                <td><code>getflangePosition()</code></td>
+                <td>인덱스를 지정하여 단일 Flange 위치 값을 반환합니다.</td>
+            </tr>
+            <tr>
+                <td><code>getJointAngle()</code></td>
+                <td>인덱스를 지정하여 단일 관절 각도 값을 반환합니다.</td>
+            </tr>
+            <tr>
+                <td><code>gettcpVelocity()</code></td>
+                <td>인덱스를 지정하여 단일 TCP 속도 값을 반환합니다.</td>
+            </tr>
+            <tr>
+                <td><code>getflangeVelocity()</code></td>
+                <td>인덱스를 지정하여 단일 Flange 속도 값을 반환합니다.</td>
+            </tr>
+            <tr>
+                <td><code>getJointVelocity()</code></td>
+                <td>인덱스를 지정하여 단일 관절 각속도 값을 반환합니다.</td>
+            </tr>
+        </tbody>
+    </thead>
+</table>
+
+<p><strong>Setter 함수</strong></p>
+<p>클래스 내부에 저장된 로봇의 상태 데이터를 외부에서 전달된 버퍼로 안전하게 복사하는 함수 그룹입니다. 이를 통해 다른 모듈에서 데이터의 복사본을 안전하게 설정하여 사용할 수 있습니다.</p>
+<table>
+    <thead>
+        <tr>
+            <th>메서드명</th>
+            <th>기능 설명</th>
+        </tr>
+        <tbody>
+            <tr>
+                <td><code>copytcpPositionData()</code></td>
+                <td>내부 TCP 위치 배열을 외부 버퍼로 안전하게 복사합니다.</td>
+            </tr>
+            <tr>
+                <td><code>copyflangePositionData()</code></td>
+                <td>내부 Flange 위치 배열을 외부 버퍼로 안전하게 복사합니다.</td>
+            </tr>
+            <tr>
+                <td><code>copyJointAngleData()</code></td>
+                <td>내부 관절 각도 배열을 외부 버퍼로 안전하게 복사합니다.</td>
+            </tr>
+            <tr>
+                <td><code>copytcpVelocityData()</code></td>
+                <td>내부 TCP 속도 배열을 외부 버퍼로 안전하게 복사합니다.</td>
+            </tr>
+            <tr>
+                <td><code>copyflangeVelocityData()</code></td>
+                <td>내부 Flange 속도 배열을 외부 버퍼로 안전하게 복사합니다.</td>
+            </tr>
+            <tr>
+                <td><code>copyJointVelocityData()</code></td>
+                <td>내부 관절 각속도 배열을 외부 버퍼로 안전하게 복사합니다.</td>
+            </tr>
+            <tr>
+                <td><code>copyInitialtcpPositionData()</code></td>
+                <td>내부 초기 TCP 위치 배열을 외부 버퍼로 안전하게 복사합니다.</td>
+            </tr>
+            <tr>
+                <td><code>copyInitialflangePositionData()</code></td>
+                <td>내부 초기 Flange 위치 배열을 외부 버퍼로 안전하게 복사합니다.</td>
+            </tr>
+            <tr>
+                <td><code>copyInitialJointAngleData()</code></td>
+                <td>내부 초기 조인트 각도 배열을 외부 버퍼로 안전하게 복사합니다.</td>
+            </tr>
+            <tr>
+                <td><code>copyRelaxationtcpPositionData()</code></td>
+                <td>내부 TCP의 릴렉세이션 위치 배열을 외부 버퍼로 안전하게 복사합니다.</td>
+            </tr>
+            <tr>
+                <td><code>copyRelaxationflangePositionData()</code></td>
+                <td>내부 Flange의 릴렉세이션 위치 배열을 외부 버퍼로 안전하게 복사합니다.</td>
+            </tr>
+            <tr>
+                <td><code>copyRelaxationAngleData()</code></td>
+                <td>내부 조인트의 릴렉세이션 각도 배열을 외부 버퍼로 안전하게 복사합니다.</td>
+            </tr>
+        </tbody>
+    </thead>
+</table>
+
+<h4>5.4.2. <code>TrajectoryIO</code>모듈</h4>
+<p>텍스트 파일에 저장된 로봇 궤적 데이터를 읽어와 메모리로 로드하는 유틸리티 모듈입니다.</p>
+<p><strong>궤적 데이터 구조체</strong></p>
+<p>파일에서 읽어온 한 줄의 경로 데이터를 저장하기 위한 표준 구조체입니다.</p>
+<table>
+    <thead>
+        <tr>
+            <th>메서드명</th>
+            <th>기능 설명</th>
+        </tr>
+        <tbody>
+            <tr>
+                <td><code>RT_Trajectory</code></td>
+                <td>로봇의 6축 조인트 각도 데이터(<code>radian</code>)를 저장하는 단일 레코드 구조체입니다.</td>
+            </tr>
+        </tbody>
+    </thead>
+</table>
+
+<p><strong>파일 입출력 함수</strong></p>
+<p>지정된 경로의 궤적 파일을 파싱하여, 각 줄의 데이터를 <code>RT_Trajectory</code> 구조체 벡터로 변환하는 핵심 기능을 제공합니다.</p>
+<table>
+    <thead>
+        <tr>
+            <th>메서드명</th>
+            <th>기능 설명</th>
+        </tr>
+        <tbody>
+            <tr>
+                <td><code>LoadTrajectoryData()</code></td>
+                <td>지정한 텍스트 파일을 한 줄씩 읽습니다. 각 줄은 6개의 조인트 각도값으로 구성되며, 이를 <code>RT_Trajectory</code> 구조체 벡터에 저장하여 반환합니다.</td>
+            </tr>
+        </tbody>
+    </thead>
+</table>
+
+<h4>5.4.3. <code>VelProfile</code>모듈</h4>
+<p>로봇의 동작 과정 중 초기 및 종료 구간의 부드러운 속도 프로파일을 계산하는 모듈입니다.</p>
+<p><strong>속도의 가감속 관련 구조체</strong></p>
+<p>부드러운 속도 제어를 위한 구조체 입니다.</p>
+<table>
+    <thead>
+        <tr>
+            <th>메서드명</th>
+            <th>기능 설명</th>
+        </tr>
+        <tbody>
+            <tr>
+                <td><code>ProfileConfig</code></td>
+                <td>부드러운 속도 프로파일 계산을 위한 파라미터가 정의된 구조체입니다.</td>
+            </tr>
+        </tbody>
+    </thead>
+</table>
+<table>
+    <thead>
+        <tr>
+            <th>변수 명</th>
+            <th>기능 설명</th>
+        </tr>
+        <tbody>
+            <tr>
+                <td><code>ramp_duration_sec</code></td>
+                <td>가속/감속에 걸리는 시간을 설정 (<code>s</code>)</td>
+            </tr>
+            <tr>
+                <td><code>max_velocity</code></td>
+                <td>최대 이동 속도를 설정 (<code>mm/s</code>)</td>
+            </tr>
+            <tr>
+                <td><code>final_velocity</code></td>
+                <td>목표 위치에 도달 시 최종 동작 속도를 설정 (<code>mm/s</code>)</td>
+            </tr>
+            <tr>
+                <td><code>target_z</code></td>
+                <td>최종 목표 z축 위치 좌표를 설정 (<code>mm</code>)</td>
+            </tr>
+            <tr>
+                <td><code>move_distance</code></td>
+                <td>총 이동 거리를 설정 (감속 시작 지점을 계산하기 위한 거리 설정) (<code>mm</code>)</td>
+            </tr>
+            <tr>
+                <td><code>direction</code></td>
+                <td>이동 방향을 설정 (<code>1: 상승, -1: 하강</code>)</td>
+            </tr>
+        </tbody>
+    </thead>
+</table>
+
+<h2 id="section-appendix">6. 핵심 유틸리티 라이브러리</h2>
+<p>소프트웨어 전반에서 사용되는 공통 기능들은 별도의 유틸리티 클래스 및 함수로 구현되어 재사용성을 높입니다.</p>
+<h3 id="section-appendix-math">6.1. 수학 함수</h3>
+<p>좌표 변환 및 경로 생성에 필요한 수학적 연산을 지원합니다.</p>
+<table>
+<thead>
+<tr>
+<th>헤더 파일 / 클래스</th>
+<th>기능 설명</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>RotationZYZ.h</code></td>
+<td>Z-Y-Z 오일러 각을 입력받아 3x3 회전 행렬을 계산하는 <code>RotationZYZ</code> 함수를 제공합니다.</td>
+</tr>
+<tr>
+<td><code>VectorRange.h</code></td>
+<td>MATLAB의 <code>linspace</code>나 <code>colon</code> 연산자와 유사하게, 시작값, 끝값, 개수(또는 간격)를 지정하여 균등한 간격의 실수 벡터를 생성하는 함수를 제공합니다.</td>
+</tr>
+<tr>
+<td><code>Transformation_force.h</code>,<br><code>Transformation_torque.h</code></td>
+<td>센서 좌표계 기준의 힘/토크 벡터를 로봇 베이스 좌표계 기준으로 변환하는 클래스를 제공합니다. 내부적으로 <code>RotationZYZ</code>를 사용하여 좌표 변환을 수행합니다.</td>
+</tr>
+</tbody>
+</table>
+
+
+
+<h3 id="section-appendix-signal">6.2. 신호 처리 및 제어</h3>
+<p>센서 신호의 노이즈를 제거하고 안정적인 제어를 수행하기 위한 클래스입니다.</p>
+<table>
+<thead>
+<tr>
+<th>클래스명</th>
+<th>기능 설명</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>LowPassFilter</code></td>
+<td>2차 Butterworth 저역 통과 필터를 구현합니다. 생성자에서 샘플링 주기와 차단 주파수를 받아 필터 계수를 계산하며, <code>filter()</code> 메서드를 통해 입력 신호에 필터를 적용합니다.</td>
+</tr>
+<tr>
+<td><code>PIDController</code></td>
+<td>표준 PID(Proportional-Integral-Derivative) 제어 알고리즘을 구현합니다. <code>calculate()</code> 메서드는 목표값(setpoint)과 현재 측정값(measurement)을 받아 제어 출력값을 계산합니다. Anti-windup 및 출력 클램핑 기능이 포함되어 있습니다.</td>
+</tr>
+</tbody>
+</table>
+
+<h3 id="section-appendix-tcpip">6.3. TCP/IP 통신</h3>
+<p>TCP/IP 통신을 통해 서버와 데이터를 송수신 하기 위한 클래스 입니다.</p>
+<p><strong>주요 인터페이스</strong></p>
+<table>
+<thread>
+<tr>
+<th>메서드 명</th>
+<th>기능 설명</th>
+</tr>
+</thread>
+<tbody>
+    <tr>
+        <td><code>Connect()</code></td>
+        <td>서버에 연결하고 데이터 수신을 시작합니다.</td>
+    </tr>
+    <tr>
+        <td><code>Disconnect()</code></td>
+        <td>서버와의 연결을 종료하고 데이터 수신 쓰레드를 종료합니다.</td>
+    </tr>
+    <tr>
+        <td><code>Send()</code></td>
+        <td>서버로 메세지를 전송합니다.</td>
+    </tr>
+    <tr>
+        <td><code>IsConnected()</code></td>
+        <td>서버와의 연결 상태를 확인합니다.</td>
+    </tr>
+    <tr>
+        <td><code>SetReceiveCallback()</code></td>
+        <td>서버로 부터 데이터를 수신 시 호출 될 콜백 함수를 설정합니다.</td>
+    </tr>
+    <tr>
+        <td><code>ReceiveThreadFunc()</code></td>
+        <td>서버로부터 데이터를 수신하기 위한 쓰레드 함수입니다.</td>
+    </tr>
+</tbody>
+</table>
+<p><strong>관련 플래그 및 변수</strong></p>
+<table>
+<thread>
+<tr>
+<th>메서드 명</th>
+<th>기능 설명</th>
+</tr>
+</thread>
+<tbody>
+    <tr>
+        <td><code>m_pReceiveThread()</code></td>
+        <td>서버로부터 데이터 수신을 위한 쓰레드 포인터</td>
+    </tr>
+    <tr>
+        <td><code>m_isConnected()</code></td>
+        <td>서버와의 통신 연결 상태 플래그</td>
+    </tr>
+    <tr>
+        <td><code>m_isThreadRunning()</code></td>
+        <td>서버로부터의 데이터 수신 쓰레드 루프 제어 플래그</td>
+    </tr>
+    <tr>
+        <td><code>m_sendQueue()</code></td>
+        <td>서버로 전송할 메세지를 저장하는 큐</td>
+    </tr>
+    <tr>
+        <td><code>m_cv()</code></td>
+        <td>큐에 메세지가 추가되었음을 워커 쓰레드에 알리기 위한 변수</td>
+    </tr>
+    <tr>
+        <td><code>m_serverIpAddress()</code>,<br><colde>m_serverPort()</colde></td>
+        <td>서버 정보를 워커 쓰레드에 전달하기 위한 멤버 변수</td>
+    </tr>
+    <tr>
+        <td><code>m_receiveCallback()</code></td>
+        <td>외부에서 전달받은 콜백 함수를 저장할 멤버 변수</td>
+    </tr>
+    <tr>
+        <td><code>m_queueMutex()</code>,<br><code>m_connectMutex</code></td>
+        <td>m_sendQueue 및 서버와의 연결 상태를 보호하기 위한 뮤텍스</td>
+    </tr>
+</tbody>
+</table>
+
+<h3 id="section-appendix-utils">6.4. 기타 유틸리티</h3>
+<p>스레드 관리, GUI 컨트롤 등 기타 보조 기능을 제공합니다.</p>
+<table>
+<thead>
+<tr>
+<th>헤더 파일 / 클래스</th>
+<th>기능 설명</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ThreadHelpers.h</code></td>
+<td>MFC의 <code>CWinThread</code> 기반 스레드를 안전하게 종료하기 위한 <code>SafeThreadQuit</code> 유틸리티 함수를 제공합니다. 종료 플래그를 설정하고 <code>WaitForSingleObject</code>를 사용하여 스레드가 완전히 종료될 때까지 대기합니다.</td>
+</tr>
+<tr>
+<td><code>OScopeCtrl</code></td>
+<td>여러 데이터 트렌드를 실시간 그래프로 시각화하는 커스텀 MFC 컨트롤입니다. <code>AppendPoints()</code> 메서드로 새로운 데이터를 추가하면 그래프가 자동으로 스크롤되며 업데이트됩니다. Y축 범위, 범례, 색상 등을 동적으로 설정할 수 있습니다.</td>
+</tr>
+</tbody>
+</table>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+<script>
+        mermaid.initialize({ startOnLoad: true });
+    </script>
+</body>
+</html>
