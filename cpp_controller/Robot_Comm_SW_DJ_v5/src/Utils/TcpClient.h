@@ -30,7 +30,8 @@ public:
 
     // 데이터 수신 시 호출될 콜백 함수를 설정합니다.
     // std::function은 모든 종류의 호출 가능한 것(함수 포인터, 람다 등)을 저장할 수 있는 유연한 래퍼입니다.
-    void SetReceiveCallback(std::function<void(const char*, int)> callback);
+    //void SetReceiveCallback(std::function<void(const char*, int)> callback);
+    void SetReceiveCallback(std::function<void(const RLAgentPacket&)> callback);
 
 private:
     // 쓰레드에서 실행될 정적 멤버 함수
@@ -49,7 +50,8 @@ private:
 	CString m_serverIpAddress;                              // 서버 IP 주소
 	UINT m_serverPort;  						            // 서버 포트 번호
 
-    std::function<void(const char*, int)> m_receiveCallback;// 외부(다이얼로그)에서 전달받은 콜백 함수를 저장할 멤버 변수
+    //std::function<void(const char*, int)> m_receiveCallback;// 외부(다이얼로그)에서 전달받은 콜백 함수를 저장할 멤버 변수
+    std::function<void(const RLAgentPacket&)> m_receiveCallback;
     
     std::mutex m_queueMutex;                                // m_sendQueue를 보호하기 위한 뮤텍스
     std::mutex m_connectMutex;                              // 연결 상태를 보호하기 위한 뮤텍스

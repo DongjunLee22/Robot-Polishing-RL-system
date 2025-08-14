@@ -150,7 +150,7 @@ public:
 
 	// TCP 데이터 수신 시 호출될 콜백 핸들러 함수 선언
 	void OnTcpDataReceived(const CString& message);
-	void OnRlDataReceived(const char* data, int length);
+	void OnRlDataReceived(const RLAgentPacket& packet);
 
 	// 대화 상자 데이터입니다.
 #ifdef AFX_DESIGN_TIME
@@ -195,7 +195,6 @@ private:
 	TcpClient m_tcpClient;
 	CString m_tcpReceivedData;
 	std::mutex m_tcpMutex;
-	unsigned short CalculateChecksum(const unsigned char* data, size_t length);
 
 	// Python으로부터 받은 값을 저장할 멤버 변수
 	std::atomic<float> m_receivedRlVoltage{ 0.0f };

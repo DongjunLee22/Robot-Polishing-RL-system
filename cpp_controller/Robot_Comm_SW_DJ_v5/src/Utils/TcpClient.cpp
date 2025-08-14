@@ -1,5 +1,6 @@
 ﻿// TcpClient.cpp
 #include "TcpClient.h"
+#include "Protocol.h"
 
 TcpClient::TcpClient()
     : m_pReceiveThread(nullptr), m_isConnected(false), m_isThreadRunning(false), m_serverPort(0)
@@ -75,18 +76,9 @@ bool TcpClient::IsConnected() const
     return m_isConnected.load();
 }
 
-void TcpClient::SetReceiveCallback(std::function<void(const char*, int)> callback)
+void TcpClient::SetReceiveCallback(std::function<void(const RLAgentPacket&)> callback)
 {
 	m_receiveCallback = callback;
-}
-
-unsigned short CalculateChecksum_internal(const unsigned char* data, size_t length)
-{
-	unsigned short checksum = 0;
-	for (size_t i = 0; i < length; ++i) {
-		checksum ^= data[i];
-	}
-	return checksum;
 }
 
 UINT TcpClient::ReceiveThreadFunc(LPVOID pParam)
@@ -196,31 +188,19 @@ UINT TcpClient::ReceiveThreadFunc(LPVOID pParam)
 					break;
 				}
 
-				// 패킷 데이터 추출 및 콜백 호출
-				RLAgentPacket* packet = reinterpret_cast<RLAgentPacket*>(recvBuffer.data());
-
-				// Checksum 검증 로직 활성화
-				// 1. 패킷에 포함된 체크섬 값을 가져옴 (네트워크 바이트 순서 -> 호스트 바이트 순서로 변환)
-				unsigned short received_checksum = ntohs(packet->checksum);
-
-				// 2. 수신된 데이터로 직접 체크섬을 계산
-				// (데이터의 시작부터 체크섬 필드 앞까지를 대상으로 계산)
-				unsigned short calculated_checksum = CalculateChecksum_internal(
-					(const unsigned char*)recvBuffer.data(),
-					sizeof(RLAgentPacket) - sizeof(unsigned short)
-				);
-				// 3. 두 체크섬 값을 비교
-				if (received_checksum == calculated_checksum) {
-					// 체크섬 일치: 데이터가 유효하므로 콜백 호출
+				RLAgentPacket parsedPacket;
+				// 새로 만든 Unpack 함수로 데이터 해석 및 검증 시도
+				if (UnpackRLAgentCommand(recvBuffer.data(), recvBuffer.size(), parsedPacket))
+				{
+					// 성공 시, 잘 정리된 구조체를 콜백으로 전달
 					if (pClient->m_receiveCallback) {
-						// 콜백 함수에 패킷 전체를 전달
-						pClient->m_receiveCallback(recvBuffer.data(), sizeof(RLAgentPacket));
+						pClient->m_receiveCallback(parsedPacket);
 					}
 				}
-				else {
-					// 체크섬 불일치: 데이터가 손상됨. 콜백을 호출하지 않고 패킷을 폐기.
-					// 콘솔에 에러 메시지를 출력하여 디버깅에 활용할 수 있습니다.
-					TRACE("Checksum error! Packet discarded.\n");
+				else
+				{
+					// Unpack 실패 (체크섬 오류 등) 시, 메시지를 출력하고 패킷을 폐기
+					TRACE("Packet discard due to unpacking failure.\n");
 				}
 
 				// 성공이든 실패든, 처리한 패킷(9바이트)은 버퍼에서 "한 번만" 삭제

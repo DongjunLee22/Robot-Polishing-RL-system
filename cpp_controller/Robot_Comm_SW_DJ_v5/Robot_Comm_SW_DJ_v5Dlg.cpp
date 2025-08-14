@@ -102,8 +102,8 @@ BOOL CRobotCommSWDJv5Dlg::OnInitDialog()
 	SetIcon(m_hIcon, TRUE);			// 큰 아이콘을 설정
 	SetIcon(m_hIcon, FALSE);		// 작은 아이콘을 설정
 
-	m_tcpClient.SetReceiveCallback([this](const char* data, int length) {
-		this->OnRlDataReceived(data, length);
+	m_tcpClient.SetReceiveCallback([this](const RLAgentPacket& packet) {
+		this->OnRlDataReceived(packet);
 		});
 
 	CRect rtGraph_force, rtGraph_pos;														// 그래프 컨트롤의 위치를 저장할 변수
@@ -2002,7 +2002,6 @@ void CRobotCommSWDJv5Dlg::OnTcpDataReceived(const CString& message)
 		Status_gui_str = _T("서버와의 연결이 끊어졌습니다.");
 		var_status_gui.SetWindowTextW(Status_gui_str);
 
-		//m_tcpClient.Disconnect();
 		::PostMessage(m_hWnd, WM_USER_TCP_DISCONNECT, 0, 0);
 		return;
 	}
@@ -2053,34 +2052,6 @@ void CRobotCommSWDJv5Dlg::OnBnClickedButTcpip()
 	}
 }
 
-//void CRobotCommSWDJv5Dlg::OnBnClickedButTcpsend()
-//{
-//	// 1. 서버에 연결되어 있는지 먼저 확인
-//	if (!m_tcpClient.IsConnected())
-//	{
-//		Status_gui_str = _T("서버에 연결되어 있지 않습니다. 먼저 TCP/IP 연결을 시도하세요.");
-//		var_status_gui.SetWindowTextW(Status_gui_str);
-//		return;
-//	}
-//
-//	// 2. 보낼 메시지를 CString 변수에 준비
-//	CString messageToSend = _T("hihi");
-//
-//	// 3. m_tcpClient의 Send() 함수를 호출하여 메시지를 전송
-//	if (m_tcpClient.Send(messageToSend))
-//	{
-//		// 전송 성공 시
-//        Status_gui_str.Format(_T("서버로 메시지 '%s'를 성공적으로 전송했습니다."), static_cast<LPCTSTR>(messageToSend));
-//		var_status_gui.SetWindowTextW(Status_gui_str);
-//	}
-//	else
-//	{
-//		// 전송 실패 시
-//		Status_gui_str = _T("메시지 전송에 실패했습니다.");
-//		var_status_gui.SetWindowTextW(Status_gui_str);
-//	}
-//}
-
 void CRobotCommSWDJv5Dlg::OnBnClickedButTcpsend()
 {
 	// 1. 서버에 연결되어 있는지 먼저 확인합니다.
@@ -2091,33 +2062,16 @@ void CRobotCommSWDJv5Dlg::OnBnClickedButTcpsend()
 		return;
 	}
 
-	// 2. 전송할 패킷을 생성하고 임의의 테스트 데이터로 채웁니다.
-	PythonCommPacket testPacket;
+	// 2. 헬퍼 함수를 호출하여 테스트용 데이터로 전송 패킷을 생성합니다.
+	std::vector<char> packetToSend = PackRobotStatus( // 이름이 바뀐 함수 호출
+		-12.34f, 56.78f, 90.12f, -9.87f, 1
+	);
 
-	testPacket.sof = 0xAAAA;
-	testPacket.contactForceZ = -12.34f;     // 테스트용 접촉력
-	testPacket.chamberPressure = 56.78f;   // 테스트용 챔버 압력
-	testPacket.chamberVoltage = 90.12f;    // 테스트용 챔버 전압
-	testPacket.pidControlValue = -9.87f;    // 테스트용 PID 제어값
-	testPacket.pidFlag = 1;                // PID 활성화 상태로 테스트
-
-	// 3. Endianness 변환 (네트워크 바이트 순서 - Big Endian)
-	testPacket.sof = htons(testPacket.sof);
-	// float 값들은 포인터 캐스팅을 통해 4바이트 정수처럼 변환합니다.
-	*(unsigned long*)&testPacket.contactForceZ = htonl(*(unsigned long*)&testPacket.contactForceZ);
-	*(unsigned long*)&testPacket.chamberPressure = htonl(*(unsigned long*)&testPacket.chamberPressure);
-	*(unsigned long*)&testPacket.chamberVoltage = htonl(*(unsigned long*)&testPacket.chamberVoltage);
-	*(unsigned long*)&testPacket.pidControlValue = htonl(*(unsigned long*)&testPacket.pidControlValue);
-
-	// 4. Checksum을 계산하고 설정합니다.
-	// 패킷의 시작부터 checksum 필드 전까지의 데이터를 기반으로 계산합니다.
-	testPacket.checksum = CalculateChecksum((const unsigned char*)&testPacket, sizeof(testPacket) - sizeof(unsigned short));
-	testPacket.checksum = htons(testPacket.checksum);
-
-	// 5. 생성된 이진 패킷을 전송합니다.
-	if (m_tcpClient.Send((char*)&testPacket, sizeof(testPacket)))
+	// 3. 생성된 이진 패킷을 전송합니다.
+	if (m_tcpClient.Send(packetToSend.data(), packetToSend.size()))
 	{
-		Status_gui_str = _T("테스트 이진 패킷(21 bytes)을 성공적으로 전송했습니다.");
+		// CString::Format을 사용하여 문자열을 안전하게 포맷팅합니다.
+		Status_gui_str.Format(_T("테스트 이진 패킷(%d bytes)을 성공적으로 전송했습니다."), packetToSend.size());
 		var_status_gui.SetWindowTextW(Status_gui_str);
 	}
 	else
@@ -2127,37 +2081,16 @@ void CRobotCommSWDJv5Dlg::OnBnClickedButTcpsend()
 	}
 }
 
-unsigned short CRobotCommSWDJv5Dlg::CalculateChecksum(const unsigned char* data, size_t length)
+void CRobotCommSWDJv5Dlg::OnRlDataReceived(const RLAgentPacket& packet)
 {
-	unsigned short checksum = 0;
-	for (size_t i = 0; i < length; ++i) {
-		checksum ^= data[i];
-	}
-	return checksum;
-}
-
-void CRobotCommSWDJv5Dlg::OnRlDataReceived(const char* data, int length)
-{
-	// 수신된 데이터의 길이가 RLAgentPacket 크기와 같은지 확인
-	if (length != sizeof(RLAgentPacket)) {
-		return;
-	}
-
-	// 데이터를 RLAgentPacket 포인터로 캐스팅
-	RLAgentPacket* packet = (RLAgentPacket*)data;
-
-	// Endianness 변환 (Network to Host Byte Order) - ntohs/ntohl 사용
-	float rl_voltage = packet->rlVoltageValue;
-	*(unsigned long*)&rl_voltage = ntohl(*(unsigned long*)&rl_voltage);
+	// 모든 처리가 끝난 깨끗한 구조체를 바로 사용
 
 	// 원자적 멤버 변수에 값 저장 (스레드 안전)
-	m_receivedRlVoltage.store(rl_voltage);
-	m_receivedConfirmFlag.store(packet->confirmFlag == 1);
+	m_receivedRlVoltage.store(packet.rlVoltageValue);
+	m_receivedConfirmFlag.store(packet.confirmFlag == 1);
 
-	// GUI 업데이트는 OnTimer에서 처리하도록 유도
-	// 예시: 상태바에 간단한 수신 확인 메시지 출력
-	// PostMessage를 사용하면 스레드에서 GUI로 안전하게 메시지를 보낼 수 있음
+	// GUI 업데이트
 	CString msg;
-	msg.Format(_T("RL 데이터 수신: Voltage=%.2f"), rl_voltage);
+	msg.Format(_T("RL 데이터 수신: Voltage=%.2f"), packet.rlVoltageValue);
 	var_status_gui.SetWindowTextW(msg);
 }

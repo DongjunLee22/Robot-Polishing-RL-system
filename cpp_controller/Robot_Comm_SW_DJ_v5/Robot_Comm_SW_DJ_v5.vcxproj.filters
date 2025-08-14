@@ -182,6 +182,9 @@
     <ClCompile Include="src\Utils\TcpClient.cpp">
       <Filter>소스 파일\src\Utils</Filter>
     </ClCompile>
+    <ClCompile Include="src\Utils\Protocol.cpp">
+      <Filter>소스 파일\src\Utils</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="RobotCommSWDJv5.rc">

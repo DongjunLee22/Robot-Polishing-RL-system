@@ -120,7 +120,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;_WINDOWS;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>$(SolutionDir)\Robot_Comm_SW_DJ_v5\library\Eigen;$(SolutionDir)\Robot_Comm_SW_DJ_v5\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)\Robot_Comm_SW_DJ_v5\library\Eigen;$(SolutionDir)\Robot_Comm_SW_DJ_v5\include;$(ProjectDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <DisableSpecificWarnings>%(DisableSpecificWarnings)</DisableSpecificWarnings>
     </ClCompile>
@@ -149,7 +149,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>$(SolutionDir)\Robot_Comm_SW_DJ_v5\library\Eigen;$(SolutionDir)\Robot_Comm_SW_DJ_v5\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)\Robot_Comm_SW_DJ_v5\library\Eigen;$(SolutionDir)\Robot_Comm_SW_DJ_v5\include;$(ProjectDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <DisableSpecificWarnings>%(DisableSpecificWarnings)</DisableSpecificWarnings>
     </ClCompile>
@@ -250,6 +250,7 @@
     <ClCompile Include="src\Utils\LowPassFilter.cpp" />
     <ClCompile Include="src\Utils\OScopeCtrl.cpp" />
     <ClCompile Include="src\Utils\PIDController.cpp" />
+    <ClCompile Include="src\Utils\Protocol.cpp" />
     <ClCompile Include="src\Utils\TcpClient.cpp" />
     <ClCompile Include="stdafx.cpp" />
     <ClCompile Include="uuids.c" />
