@@ -92,6 +92,8 @@
 #define IDC_VAR_SPINDLE_VOLT            1051
 #define IDC_BUT_HOME_INIT2              1052
 #define IDC_BUT_HOME_INIT_TCP           1052
+#define IDC_VAR_CHAMBER_AIR2            1052
+#define IDC_VAR_RESIDUAL_PRESSURE       1052
 
 // Next default values for new objects
 // 

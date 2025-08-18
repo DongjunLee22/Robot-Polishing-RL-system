@@ -33,15 +33,18 @@
 - **총 크기**: **21 bytes**
 - **SOF (Start of Frame)**: `0xAAAA`
 
-| 필드명             | 데이터 타입        | 크기 (bytes) | 설명                                   |
-| :----------------- | :----------------- | :----------- | :------------------------------------- |
-| `sof`              | `unsigned short`   | 2            | 패킷 시작 플래그, 항상 `0xAAAA`          |
-| `contactForceZ`    | `float`            | 4            | Z축 방향 접촉력 (단위: N)              |
-| `chamberPressure`  | `float`            | 4            | 공압 챔버 압력 (단위: MPa)          |
-| `chamberVoltage`   | `float`            | 4            | 공압 챔버 제어 전압 (단위: V)          |
-| `pidControlValue`  | `float`            | 4            | PID 제어기 출력 값                     |
-| `pidFlag`          | `unsigned char`    | 1            | PID 제어기 활성화 상태 (0: 비활성, 1: 활성) |
-| `checksum`         | `unsigned short`   | 2            | `contactForceZ`부터 `pidFlag`까지의 CRC-16 값 |
+| 필드명               | 데이터 타입        | 크기 (bytes) | 설명                                           |
+| :------------------- | :----------------- | :----------- | :------------------------------------------- |
+| `sof`                | `unsigned short`   | 2            | 패킷 시작 플래그, 항상 `0xAAAA`                |
+| `Current Force`      | `float`            | 4            | 현재의 Z축 방향 접촉력 (단위: N)               |
+| `Target Force`       | `float`            | 4            | 목표 Z축 방향 접촉력 (단위: N)                 |
+| `Force Error`        | `float`            | 4            | 접촉력 오차 (단위: N)                          |
+| `Force Error dot`    | `float`            | 4            | 접촉력 오차의 미분 값 (단위: N)                 |
+| `Force Error int`    | `float`            | 4            | 접촉력 오차의 적분 값 (단위: N)                |
+| `Current Pressure`   | `float`            | 4            | P공압 챔버 압력 (단위: MPa)                    |
+| `pidFlag`            | `unsigned char`    | 1            | PID 제어기 활성화 상태 (0: 비활성, 1: 활성)     |
+| `Sander Active Flag` | `unsigned char`    | 1            | 샌더 활성화 상태 (0: 비활성, 1: 활성)          |
+| `checksum`           | `unsigned short`   | 2            | `Current Forc`부터 `Sander Active Flag`까지의 CRC-16 값 |
 
 ### 3.2. Python Server → C++ Client (RL 에이전트 명령)
 
@@ -50,11 +53,12 @@
 - **SOF (Start of Frame)**: `0xBBBB`
 
 | 필드명           | 데이터 타입      | 크기 (bytes) | 설명                                      |
-| :--------------- | :--------------- | :----------- | :---------------------------------------- |
-| `sof`            | `unsigned short` | 2            | 패킷 시작 플래그, 항상 `0xBBBB`             |
-| `rlVoltageValue` | `float`          | 4            | 강화학습 에이전트가 결정한 제어 전압 (단위: V) |
-| `confirmFlag`    | `unsigned char`  | 1            | C++로부터 메시지 수신 확인용 (0: 미수신, 1: 수신) |
-| `checksum`       | `unsigned short` | 2            | `rlVoltageValue`부터 `confirmFlag`까지의 CRC-16 값 |
+| :------------------ | :--------------- | :----------- | :---------------------------------------- |
+| `sof`               | `unsigned short` | 2            | 패킷 시작 플래그, 항상 `0xBBBB`             |
+| `Residual Pressure` | `float`          | 4            | 강화학습 에이전트로부터 계산된 잔차 공압 값 (단위: MPa) |
+| `Message Send Flag` | `unsigned char`  | 1            | 서버(Python)로부터 메시지 수신 확인용 (0: 미수신, 1: 수신) |
+| `Episode On Flag`   | `unsigned char`  | 1            | 서버의 강화학습 에피소드 종료 여부 (0: 에피소드 종료 X, 1: 에피소드 종료 O) |
+| `checksum`          | `unsigned short` | 2            | `rlVoltageValue`부터 `confirmFlag`까지의 CRC-16 값 |
 
 ---
 

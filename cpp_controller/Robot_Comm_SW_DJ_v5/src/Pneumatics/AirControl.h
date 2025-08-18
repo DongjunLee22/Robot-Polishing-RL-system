@@ -77,7 +77,6 @@ public:
     double feedbackChamberPressure() const noexcept { return m_feedbackPressChamber.load(); }
     double feedbackSpindlePressure() const noexcept { return m_feedbackPressSpindle.load(); }
 
-
 private:
     // AO 및 AI 태스크를 생성하고 채널을 추가한 뒤 시작
     bool setupAoTask();
