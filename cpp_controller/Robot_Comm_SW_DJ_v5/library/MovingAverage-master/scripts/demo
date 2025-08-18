@@ -1,6 +1,0 @@
-#! /bin/bash
-
-rm -rf ./demo/out
-mkdir ./demo/out
-g++ -I ./src ./demo/main.cpp ./src/MovingAverage.cpp -o ./demo/out/demo
-./demo/out/demo > ./demo/out/data.csv
