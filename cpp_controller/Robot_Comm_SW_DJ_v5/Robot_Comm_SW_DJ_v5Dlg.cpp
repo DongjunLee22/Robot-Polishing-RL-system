@@ -344,6 +344,56 @@ bool CRobotCommSWDJv5Dlg::StartContactThread_Curve()
 	return true;
 }
 
+bool CRobotCommSWDJv5Dlg::StartContactThread_Flat_RL()
+{
+	if (m_pThread_FC)
+		return false;
+
+	// 1) 조건 체크
+	if (!m_flags.servoRunning.load())							// 서보 제어가 시작되지 않은 경우 경고 알림 처리
+	{
+		Status_gui_str = _T("먼저 Servo 제어를 시작하십시오!");
+		var_status_gui.SetWindowTextW(Status_gui_str);
+		return false;
+	}
+	if (!m_flags.airRunning.load())								// 공압 제어가 시작되지 않은 경우 경고 알림 처리
+	{
+		Status_gui_str = _T("공압 시스템 연결이 되지 않았으므로 공압 시스템을 연결합니다...");
+		var_status_gui.SetWindowTextW(Status_gui_str);
+		OnBnClickedButAirOn();
+		return false;
+	}
+	if (!m_flags.ftRunning.load())								// FT 센서가 연결되지 않은 경우 경고 알림 처리
+	{
+		Status_gui_str = _T("FT 센서 연결이 되지 않았으므로 FT 센서를 연결합니다...");
+		var_status_gui.SetWindowTextW(Status_gui_str);
+		OnBnClickedButFtSensorOn();
+		return false;
+	}
+	
+	if (!m_flags.tcpip_flag.load())
+	{
+		Status_gui_str = _T("서버와의 통신이 연결되지 않았으므로 서버와 통신을 연결합니다...");
+		var_status_gui.SetWindowTextW(Status_gui_str);
+		OnBnClickedButTcpip();
+		return false;
+	}
+	
+
+	// 2) 로봇 구동 쓰레드 시작
+	m_flags.robotRunning.store(true);							// 로봇 구동 루프 ON
+	m_pThread_FC = AfxBeginThread(Thread_Contact_Flat_RL, this);	// 로봇 구동 쓰레드 시작
+	if (!m_pThread_FC)											// 쓰레드 생성 실패 처리
+	{
+		m_flags.robotRunning.store(false);
+		Status_gui_str = _T("접촉 쓰레드 시작 실패!");
+		var_status_gui.SetWindowTextW(Status_gui_str);
+		return false;
+	}
+	hThread_FC = m_pThread_FC->m_hThread;						// 핸들 복사
+	return true;
+}
+
 // =========================================
 // 쓰레드 일괄 종료 함수
 void CRobotCommSWDJv5Dlg::QuitAllThreads()
@@ -1292,6 +1342,454 @@ UINT CRobotCommSWDJv5Dlg::Thread_Contact_Curve(LPVOID pParam)
 	return 0;
 }
 
+
+UINT CRobotCommSWDJv5Dlg::Thread_Contact_Flat_RL(LPVOID pParam)
+{
+	CRobotCommSWDJv5Dlg* g_pDlg = (CRobotCommSWDJv5Dlg*)pParam;
+
+	// 로봇 구동 쓰레드 우선순위 설정
+	HANDLE hThread = GetCurrentThread();
+	SetThreadPriority(hThread, THREAD_PRIORITY_HIGHEST);
+	SetThreadAffinityMask(hThread, 1ULL << 2);					// CPU #2번(core 2) 고정
+
+	// 데이터 저장용 시간 변수
+	system_clock::time_point t_start, t_cd;
+	nanoseconds t_stamp_ns, t_stamp_cd_ns;
+	float t_stamp_ns_float = 0.0;
+	float t_stamp_cd_ns_float = 0.0;
+
+	// ===============================================
+	// 고분해능 타이머 초기화
+	// QueryPerformanceFrequency → 1초당 tick 수
+	LARGE_INTEGER qpf;
+	QueryPerformanceFrequency(&qpf);
+	const LONGLONG one_ms_tick = qpf.QuadPart / 1000LL;
+
+	// QueryPerformanceCounter → 시작 시각
+	LARGE_INTEGER startTick;
+	QueryPerformanceCounter(&startTick);		// 시작 시각
+
+	// nextTick: 첫 목표 시각 = startTick + one_ms_tick
+	LARGE_INTEGER nextTick = startTick;
+	nextTick.QuadPart += one_ms_tick;		// 첫 주기 목표
+
+	// 반복 주파수 측정용 변수(1초마다 실제 주기 계산)
+	LARGE_INTEGER freqStart = startTick;
+	int i_freq = 0;
+
+	// ===============================================
+	// 실험 설정
+	g_pDlg->m_setting.Target_Force_N.store(-30.0f);				// 목표 접촉력 설정 (N)   [음수로 설정해줘야 로봇 베이스 좌표계와 동일한 방향]
+	g_pDlg->m_setting.Force_limit_N.store(50.0f);				// 접촉력 제한값 설정 (N)
+	g_pDlg->m_setting.Target_vz.store(5.0f);					// 목표 접촉 속도 설정 (mm/s) [양수로 설정해줘야 로봇 베이스 좌표계와 동일한 방향]
+	int Saturation_time = 5000;								// 접촉 유지 시간 설정 (ms)
+	g_pDlg->m_setting.First_Contact.store(true);
+
+	// ==============================================
+	// 로봇 동작 시 초기 로봇의 시작 및 종료에 대한 기준 위치값 측정
+	auto Init_flange_pos_load = g_pDlg->m_robotState.getSnapshot();
+	g_pDlg->m_robotState.saveInitialflangePosition(Init_flange_pos_load.flangePos.data(), 6);
+	auto initialPosArray_flange = g_pDlg->m_robotState.getInitialflangePositionArray();
+
+	// ===============================================
+	// Cubic smoothstep 함수로 생성되는 속도 경로로 로봇을 하강 & 상승 구동하기 위한 설정
+	static ProfileConfig approachConfig;
+	static ProfileConfig retractConfig;
+	static float start_pos_z = 0.0f;
+	static auto rampStartTime = std::chrono::system_clock::now();
+
+	// ===============================================
+	// 공압 관련 변수 초기화
+	const double pressureRampDownDuration_sec = 3.0;			// 압력 감소 시간 (초)
+	static auto pressureRampStartTime = std::chrono::system_clock::now();
+	static float initialChamberPressure = 0.0f;
+
+	// ===============================================
+	// PID 제어기 관련 변수 초기화
+	const double base_pressure_mpa = 0.2;						// MFT 초기 기본 압력 (MPa) => 최대 0.4MPa까지 가압 가능
+	const double MFT_diameter_mm = 94.9;						// MFT 직경 (mm)
+	double MFT_radius_m = MFT_diameter_mm / 2.0 * 1e-3;		// MFT 반지름 (m)					
+	double A_m2 = M_PI * MFT_radius_m * MFT_radius_m;			// MFT 단면적 (m^2)
+
+	// PID 게인 및 바운드 설정
+	g_pDlg->m_pidctrl.setGains(
+		10.0,			// Kp
+		1.0,			// Ki
+		0.0);			// Kd
+	g_pDlg->m_pidctrl.setOutputLimits(
+		-1500.0,		// min
+		1500.0);		// max
+
+	// ===============================================
+	// RL 통신용 변수 초기화
+	float RL_previous_error_force_z = 0.0f;						// 이전 접촉력 오차값 초기화
+	float RL_integral_error_force_z = 0.0f;						// 접촉력 오차 적분값 초기화
+	const float RL_dt = 0.001f;									// 제어 주기 (초 단위)
+	
+	// 적분 와인드업 방지를 위한 한계값
+	const float RL_max_integral_limit = 100.0f;					// 최대 적분 한계값
+	const float RL_min_integral_limit = -100.0f;				// 최소 적분 한계값
+
+	// ===============================================
+	// 데이터 기록 시작
+	g_pDlg->m_flags.logThreadRunning.store(true);
+	g_pDlg->m_pThread_Logger = AfxBeginThread(Thread_Logger, g_pDlg);
+
+	t_start = system_clock::now();
+
+	while (g_pDlg->m_flags.robotRunning.load())
+	{
+		auto ts = std::chrono::steady_clock::now();
+
+		// 로봇 & 센서 정보 수신
+		auto Th_robotData_flat = g_pDlg->m_robotState.getSnapshot();
+		auto Th_sensorData_flat = g_pDlg->m_ftSensor.getSnapshot();
+
+		// =========================================================================
+		// 1. 서버로 데이터 송신
+		// =========================================================================
+		// 서버로 보낼 메세지 생성
+		float current_force_z = Th_sensorData_flat.filteredForce[2];
+		float target_force_z = g_pDlg->m_setting.Target_Force_N.load();
+		float error_force_z = target_force_z - current_force_z;
+		float current_chamber_p = (float)g_pDlg->m_airctrl.feedbackChamberPressure();
+		float error_force_z_dot = (error_force_z - RL_previous_error_force_z) / RL_dt; // 접촉력 오차 미분값
+		RL_previous_error_force_z = error_force_z;
+		RL_integral_error_force_z += error_force_z * RL_dt;
+		if (RL_integral_error_force_z > RL_max_integral_limit) {
+			RL_integral_error_force_z = RL_max_integral_limit;
+		}
+		else if (RL_integral_error_force_z < RL_min_integral_limit) {
+			RL_integral_error_force_z = RL_min_integral_limit;
+		};
+
+		std::vector<char> packetToSend = PackRobotStatus(
+			current_force_z,
+			target_force_z,
+			error_force_z,
+			error_force_z_dot,
+			RL_integral_error_force_z,
+			current_chamber_p,
+			g_pDlg->m_flags.RL_pid_flag.load(),
+			g_pDlg->m_flags.RL_sanderactive_flag.load());
+
+		// 서버로 메세지 전송
+		if (g_pDlg->m_tcpClient.IsConnected())
+		{
+			g_pDlg->m_tcpClient.Send(packetToSend.data(), packetToSend.size());
+		}
+
+		// =========================================================================
+		// 2. 서버로부터 데이터 수신
+		// =========================================================================
+		g_pDlg->m_tcpip.is_new_message_received = g_pDlg->m_received_RL_Confirm_Flag.load();
+		if (g_pDlg->m_tcpip.is_new_message_received)
+		{
+			g_pDlg->m_tcpip.rl_pressure_from_server = g_pDlg->m_received_RL_Pressure.load();
+			g_pDlg->m_received_RL_Confirm_Flag.store(false);
+		}
+
+		// =========================================================================
+		// 3. 로봇 구동제어
+		if (g_pDlg->m_flags.ftRunning.load())
+		{
+			if (g_pDlg->m_flags.flat_stop.load() == true)
+			{
+				g_pDlg->m_setting.vx_mms.store(0.0);
+				g_pDlg->m_setting.vy_mms.store(0.0);
+				g_pDlg->m_setting.vz_mms.store(0.0);
+
+				g_pDlg->m_servoctrl.vx_cmd.store(g_pDlg->m_setting.vx_mms.load());
+				g_pDlg->m_servoctrl.vy_cmd.store(g_pDlg->m_setting.vy_mms.load());
+				g_pDlg->m_servoctrl.vy_cmd.store(g_pDlg->m_setting.vz_mms.load());
+
+				g_pDlg->m_setting.Control_Step = 3;
+				g_pDlg->m_setting.First_Contact.store(true);
+				g_pDlg->m_flags.flat_stop.store(false);
+			}
+			// Control Step.0: 툴을 금형 시편에 접촉하기 위한 하강 동작
+			if (g_pDlg->m_setting.Control_Step == 0)
+			{
+				if (g_pDlg->m_setting.First_Contact.load() == true) {
+					// 1. 상태 초기화
+					rampStartTime = std::chrono::system_clock::now();
+					g_pDlg->m_setting.First_Contact.store(false);
+
+					// 2. 하강 시작 위치 기록
+					start_pos_z = Th_robotData_flat.flangePos[2];
+
+					// 3. 하강 프로파일 설정
+					approachConfig.direction = -1;
+					approachConfig.max_velocity = g_pDlg->m_setting.Target_vz;
+					approachConfig.final_velocity = 1.0f;
+					approachConfig.target_z = 385.0f;
+					approachConfig.ramp_duration_sec = 3.0; // 가속 시간 설정
+					approachConfig.move_distance = std::abs(approachConfig.target_z - start_pos_z);	// 총 이동 거리 계산
+				}
+				auto now = std::chrono::system_clock::now();
+				double elapsed_sec = std::chrono::duration<double>(now - rampStartTime).count();
+				float current_pos_z = Th_robotData_flat.flangePos[2];
+
+				// 설정된 approachConfig를 사용하여 속도 계산
+				float final_target_vz = g_pDlg->m_velProfile.calculate(approachConfig, elapsed_sec, current_pos_z, start_pos_z);
+				g_pDlg->m_setting.vz_mms.store(final_target_vz);
+
+				// 목표 접촉력 도달 시 다음 단계로 이동
+				if (Th_sensorData_flat.filteredForce[2] <= g_pDlg->m_setting.Target_Force_N)
+				{
+					g_pDlg->m_setting.Control_Step = 1;
+					g_pDlg->m_setting.vz_mms.store(0.0f);
+					g_pDlg->m_setting.First_Contact.store(true);
+				}
+
+				g_pDlg->m_servoctrl.vz_cmd.store(g_pDlg->m_setting.vz_mms);	// [mm/s]
+
+				Status_gui_str.Format(_T("[평면 구동] Control Step 0:로봇 하강 중... (Vz: %.2f)"), -g_pDlg->m_setting.vz_mms.load());
+				g_pDlg->var_status_gui.SetWindowTextW(Status_gui_str);
+			}
+			// Control Step.1: 일정 시간 동안 접촉 유지 (사용자가 정한 시간 동안)
+			else if (g_pDlg->m_setting.Control_Step == 1)
+			{
+				if (g_pDlg->m_setting.First_Contact.load() == true)
+				{
+					t_cd = system_clock::now();
+					g_pDlg->m_setting.First_Contact.store(false);
+				}
+				else
+				{
+					t_stamp_cd_ns = system_clock::now() - t_cd;
+					t_stamp_cd_ns_float = float(t_stamp_cd_ns.count());
+					float t_stamp_cd_ms_float = t_stamp_cd_ns_float / 1000000.0f;
+
+					// 목표 접촉 유지 시간 초과시 접촉 유지 정지 후 다음 단계로 이동
+					if (t_stamp_cd_ms_float > Saturation_time)
+					{
+						g_pDlg->m_setting.vz_mms.store(0.0f);		// [mm/s] 접촉 유지 정지
+						g_pDlg->m_setting.First_Contact.store(true);
+						g_pDlg->m_setting.Control_Step = 2;
+					}
+					g_pDlg->m_setting.Contact_time = static_cast<int>(Saturation_time - t_stamp_cd_ms_float) * 0.001f;
+				}
+
+				float err_f = g_pDlg->m_setting.Target_Force_N.load() - Th_sensorData_flat.filteredForce[2];	// [N] 접촉력 오차
+				float kp = 0.05f;
+
+				g_pDlg->m_setting.vz_mms.store(kp * err_f);		// [mm/s] 접촉력 오차 기반 z방향 속도 설정
+				g_pDlg->m_servoctrl.vz_cmd.store(g_pDlg->m_setting.vz_mms);	// [mm/s]
+
+				Status_gui_str.Format(_T("[평면 구동] Control Step 1: 로봇 접촉 수렴중..."));
+				g_pDlg->var_status_gui.SetWindowTextW(Status_gui_str);
+			}
+			// Control Step.2: PID 제어기를 적용한 공압 제어 및 평면 구동 시작
+			else if (g_pDlg->m_setting.Control_Step == 2)
+			{
+				if (g_pDlg->m_setting.First_Contact.load() == true)
+				{
+					// 서버로 보내기 위한 플래그 설정
+					g_pDlg->m_flags.RL_pid_flag.store(true);
+					g_pDlg->m_flags.RL_sanderactive_flag.store(true);
+
+					g_pDlg->m_setting.First_Contact.store(false);
+					g_pDlg->m_setting.vx_mms.store(5.0);					// X축에 대한 이동 방향 & 속도 설정
+
+					g_pDlg->m_airctrl.setDesiredSpindlePressure(0.0);
+
+					// PID 컨트롤러 리셋
+					g_pDlg->m_pidctrl.reset();
+
+					// Ki 게인이 0이 아니어야 Integral 항 설정이 의미가 있습니다.
+					// Ki가 0이라면 이 방법은 효과가 없으며, 다른 방법을 사용해야 합니다.
+					if (g_pDlg->m_pidctrl.getKi() > 0) {
+						// 저장해둔 초기 PID 출력값을 Ki로 나누어 초기 Integral 항 값을 계산합니다.
+						// (PID 공식에서 output에 Integral 기여분은 ki * integral 이므로)
+						double initial_integral = g_pDlg->m_pidInitialOutput_N / g_pDlg->m_pidctrl.getKi();
+
+						// 새로 만든 함수를 이용해 Integral 항을 설정합니다.
+						g_pDlg->m_pidctrl.setIntegral(initial_integral);
+					}
+
+					g_pDlg->m_setting.Target_Force_N.store(-30.0f);			// 목표 접촉력 변경 [N]
+
+					Status_gui_str.Format(_T("[평면 구동] Control Step 2: 평면 구동 & PID 힘 제어 시작"));
+					g_pDlg->var_status_gui.SetWindowTextW(Status_gui_str);
+				}
+				else
+				{
+					static auto last_time = std::chrono::steady_clock::now();
+					static bool is_first_run = true;
+
+					auto current_time = std::chrono::steady_clock::now();
+					double actual_dt = std::chrono::duration<double>(current_time - last_time).count();
+					last_time = current_time;
+
+					// PID 제어 주기 설정
+					if (is_first_run)
+					{
+						actual_dt = 0.001;
+						is_first_run = false;
+					}
+					else if (actual_dt > 0.01)
+					{
+						actual_dt = 0.01;
+					}
+
+					double setpoint_force = abs(g_pDlg->m_setting.Target_Force_N.load());					// [N] 목표 접촉력 (양수로 설정)
+					double measured_force = abs(Th_sensorData_flat.filteredForce[2]);						// [N] 측정된 접촉력 (양수로 설정)
+
+					// PID 제어기 계산
+					PIDController::Result result = g_pDlg->m_pidctrl.calculate(setpoint_force, measured_force, actual_dt);
+
+					double force_correction_N = result.output;												// [N] PID 제어기 오차 기반 접촉력 보정값 (PID 출력값)
+
+					// 접촉력 => 공압 변환
+					double pressure_correction_mpa = force_correction_N / A_m2 * 1e-6;						// [MPa] 공압 보정값 (N -> MPa 변환)
+					double new_target_pressure_mpa = base_pressure_mpa + pressure_correction_mpa;			// [MPa] 새로운 목표 공압값 (기본 압력 + 보정값)
+					new_target_pressure_mpa = std::clamp(new_target_pressure_mpa, 0.0, 0.4);				// [MPa] 공압 제한 (0.0 ~ 0.4 MPa)
+
+					g_pDlg->m_airctrl.setDesiredChamberPressure(new_target_pressure_mpa);					// [MPa] 출력 챔버 공압 설정
+
+					// 현재 로봇위치가 평면 구동 종료 위치를 넘어가는지 확인
+					//   - 평면 구동 종료 위치는 사용자가 설정한 x_pos_bound[1] 값
+					//   - 평면 구동 종료 위치에 도달하면 Control Step = 3 단계로 이동
+					if (Th_robotData_flat.flangePos[0] >= g_pDlg->m_setting.x_pos_bound[1])
+					{
+						g_pDlg->m_setting.vx_mms.store(0.0);	// [mm/s]
+						g_pDlg->m_setting.First_Contact.store(true);
+						g_pDlg->m_setting.Control_Step = 3;
+					}
+				}
+
+				g_pDlg->m_servoctrl.vx_cmd.store(g_pDlg->m_setting.vx_mms);									// [mm/s]
+				g_pDlg->m_servoctrl.vz_cmd.store(g_pDlg->m_setting.vz_mms);									// [mm/s]
+
+				// [MPa] 출력 챔버 공압 최종 설정 (PID 제어값 + RL 제어값)
+				//g_pDlg->m_airctrl.setDesiredChamberPressure(g_pDlg->m_airctrl.desiredChamberPressure() + g_pDlg->m_tcpip.rl_pressure_from_server);
+				g_pDlg->m_airctrl.setDesiredChamberPressure(g_pDlg->m_airctrl.desiredChamberPressure());
+			}
+			// Control Step.3: 평면 경로 구동 마무리
+			else if (g_pDlg->m_setting.Control_Step == 3)
+			{
+				if (g_pDlg->m_setting.First_Contact.load() == true)
+				{
+					// 1. 상태 초기화
+					rampStartTime = system_clock::now();
+					g_pDlg->m_setting.First_Contact.store(false);
+					g_pDlg->m_flags.RL_pid_flag.store(false);
+					g_pDlg->m_flags.RL_sanderactive_flag.store(false);
+
+					// 2. 동작 시작 시점의 상태 저장
+					start_pos_z = Th_robotData_flat.flangePos[2];
+
+					// 3. 상승(Retract) 프로파일 설정
+					retractConfig.direction = 1;								// 상승
+					retractConfig.max_velocity = g_pDlg->m_setting.Target_vz;	// 상승 속도
+					retractConfig.final_velocity = 0.0f;						// 목표 지점에서 정지
+					retractConfig.target_z = initialPosArray_flange[2];				// GUI에서 설정한 초기 Z 위치로 설정
+					retractConfig.ramp_duration_sec = 3;						// 상승 가/감속 시간
+					retractConfig.move_distance = std::abs(retractConfig.target_z - start_pos_z); // 총 이동 거리 계산
+
+					// 4. 스핀들 공압 즉시 OFF
+					g_pDlg->m_airctrl.setDesiredChamberPressure(0.0);			// 챔버 공압 OFF
+					g_pDlg->m_airctrl.setDesiredSpindlePressure(0.0);			// 스핀들 공압 OFF
+
+					Status_gui_str.Format(_T("[평면 구동] Control Step 3: 공압 제어 완료 및 초기 위치로 이동"));
+					g_pDlg->var_status_gui.SetWindowTextW(Status_gui_str);
+				}
+				else
+				{
+					auto now = std::chrono::system_clock::now();
+					float current_pos_z = Th_robotData_flat.flangePos[2];
+
+					// 프로파일 기반 로봇 상승 로직
+					double motion_elapsed_sec = std::chrono::duration<double>(now - rampStartTime).count();
+					float final_target_vz = g_pDlg->m_velProfile.calculate(retractConfig, motion_elapsed_sec, current_pos_z, start_pos_z);
+					g_pDlg->m_setting.vz_mms.store(final_target_vz);
+
+					// 초기 로봇 시작 위치 이상으로 높은 위치에 TCP가 도달하면 구동 종료
+					//if (initialPosArray_flange[2] <= Th_robotData_flat.flangePos[2])
+					if (422.5 <= Th_robotData_flat.flangePos[2])
+					{
+						g_pDlg->m_setting.vz_mms = 0.0;
+						Status_gui_str.Format(_T("[평면 구동] Control Step 3: 로봇 구동 종료"));
+						g_pDlg->var_status_gui.SetWindowTextW(Status_gui_str);
+
+						g_pDlg->OnBnClickedButRobotDisconnect();
+					}
+				}
+				g_pDlg->m_servoctrl.vz_cmd.store(g_pDlg->m_setting.vz_mms);	// [mm/s]
+				Status_gui_str.Format(_T("[평면 구동] Control Step 3: 프로파일 상승 중... (Vz: %.2f)"), g_pDlg->m_setting.vz_mms.load());
+				g_pDlg->var_status_gui.SetWindowTextW(Status_gui_str);
+			}
+		}
+
+		//////////////////////////////////////////////////////////////////////////
+		////데이터 기록+++++++++++++++++++++++++++++++++++++++++++++++++++++
+		//////////////////////////////////////////////////////////////////////////		
+		t_stamp_ns = system_clock::now() - t_start;
+		t_stamp_ns_float = float(t_stamp_ns.count());
+		float t_stamp_ms_float = t_stamp_ns_float / 1000000.0f;
+
+		LogData log;
+		log.data.reserve(32); // 로그 데이터 크기 예약
+
+		log.data.push_back(t_stamp_ms_float);
+		log.data.insert(log.data.end(), Th_robotData_flat.flangePos.begin(), Th_robotData_flat.flangePos.end());
+		log.data.insert(log.data.end(), Th_sensorData_flat.filteredForce.begin(), Th_sensorData_flat.filteredForce.end());
+		log.data.insert(log.data.end(), Th_sensorData_flat.filteredTorque.begin(), Th_sensorData_flat.filteredTorque.end());
+
+		log.data.push_back(g_pDlg->m_setting.vz_mms);
+		log.data.push_back((float)g_pDlg->m_pidctrl.getLastError());
+		log.data.push_back((float)g_pDlg->m_airctrl.sendChamberPressure());
+		log.data.push_back((float)g_pDlg->m_airctrl.sendChamberVoltage());
+		log.data.push_back((float)g_pDlg->m_airctrl.sendSpindlePressure());
+		log.data.push_back((float)g_pDlg->m_airctrl.sendSpindleVoltage());
+		log.data.push_back((float)g_pDlg->m_airctrl.feedbackChamberPressure());
+		log.data.push_back((float)g_pDlg->m_airctrl.feedbackChamberVoltage());
+		log.data.push_back((float)g_pDlg->m_airctrl.feedbackSpindlePressure());
+		log.data.push_back((float)g_pDlg->m_airctrl.feedbackSpindleVoltage());
+
+        log.data.push_back((float)g_pDlg->m_received_RL_Pressure);
+		log.data.push_back(g_pDlg->m_received_RL_Confirm_Flag.load());
+		log.data.push_back(g_pDlg->m_received_RL_Episode_Flag.load());
+		{
+			std::lock_guard<std::mutex> lock(g_pDlg->m_logMutex);
+			g_pDlg->m_logQueue.push(log);
+		}
+		g_pDlg->m_logCv.notify_one();
+
+		////////////////////////////////////////////////////////////////////////////
+		//////while문 속도 제어+++++++++++++++++++++++++++++++++++++++++++++++++++++
+		////////////////////////////////////////////////////////////////////////////
+		// 1ms 경과까지 스핀 대기
+		for (;;)
+		{
+			LARGE_INTEGER now;
+			QueryPerformanceCounter(&now);					// 현재 시각
+			if (now.QuadPart >= nextTick.QuadPart) break;	// 1ms 경과
+			_mm_pause();									// 20~30 ns 휴식
+		}
+
+		// 다음 루프를 위해 nextTick 업데이트
+		nextTick.QuadPart += one_ms_tick;
+
+		////////////////////////////////////////////////////////////////////////////
+		//////주기 측정 및 출력+++++++++++++++++++++++++++++++++++++++++++++++++++++
+		////////////////////////////////////////////////////////////////////////////
+		i_freq++;
+		if (i_freq == g_pDlg->m_setting.set_Hz)
+		{
+			LARGE_INTEGER now;
+			QueryPerformanceCounter(&now);
+			double elapsed_s = (double(now.QuadPart - freqStart.QuadPart) / double(qpf.QuadPart));
+			g_pDlg->var_freq_main = 1.0 / (elapsed_s / static_cast<double>(g_pDlg->m_setting.set_Hz));
+			i_freq = 0;
+			freqStart = now;
+		}
+	}
+	g_pDlg->m_flags.logThreadRunning.store(false);
+	g_pDlg->m_flags.robotRunning.store(false);
+	return 0;
+}
 // =========================================
 // 데이터 저장 쓰레드 함수
 UINT CRobotCommSWDJv5Dlg::Thread_Logger(LPVOID pParam)
@@ -1309,12 +1807,10 @@ UINT CRobotCommSWDJv5Dlg::Thread_Logger(LPVOID pParam)
 	// 헤더 저장
 	g_pDlg->m_dataFile << "time(ms),"
 		<< "Pos1_act(mm),Pos2_act(mm),Pos3_act(mm),Pos4_act(deg),Pos5_act(deg),Pos6_act(deg),"
-		<< "Joint1_pos_act(deg),Joint2_pos_act(deg),Joint3_pos_act(deg),Joint4_pos_act(deg),Joint5_pos_act(deg),Joint6_pos_act(deg),"
-		<< "Pos1_vel_act(mm/s),Pos2_vel_act(mm/s),Pos3_vel_act(mm/s),Pos4_vel_act(deg/s),Pos5_vel_act(deg/s),Pos6_vel_act(deg/s),"
-		<< "Joint1_vel_act(deg/s),Joint2_vel_act(deg/s),Joint3_vel_act(deg/s),Joint4_vel_act(deg/s),Joint5_vel_act(deg/s),Joint6_vel_act(deg/s),"
 		<< "Force_x(N),Force_y(N),Force_z(N),Torque_x(Nmm),Torque_y(Nmm),Torque_z(Nmm),"
 		<< "vz_mms(mm/s),PID_error_chamber(N),P_AO_chamber(MPa),V_AO_chamber(V),P_AO_spindle(MPa),V_AO_spindle(V),"
-		<< "P_AI_chamber(MPa),V_AI_chamber(V),P_AI_spindle(MPa),V_AI_spindle(V)\n";
+		<< "P_AI_chamber(MPa),V_AI_chamber(V),P_AI_spindle(MPa),V_AI_spindle(V),"
+		<< "RL_pressure(MPa),RL_confirm_flag,RL_episode_flag\n";
 
 	while (g_pDlg->m_flags.logThreadRunning || !g_pDlg->m_logQueue.empty()) {
 		std::unique_lock<std::mutex> lock(g_pDlg->m_logMutex);
@@ -1620,18 +2116,29 @@ void CRobotCommSWDJv5Dlg::OnBnClickedButForceControl()
 	if (m_flags.loadTraj.load() == false)
 	{
 		// Contact 쓰레드 시작 (Flat 경로 구동)
-		if (StartContactThread_Flat()) {
-			Status_gui_str = _T("평면 경로 구동 쓰레드 시작!");
+		//if (StartContactThread_Flat()) 
+		//{
+		//	Status_gui_str = _T("평면 경로 구동 쓰레드 시작!");
+		//	var_status_gui.SetWindowTextW(Status_gui_str);
+		//	SetTimer(1, 62, NULL);								// GUI 타이머
+		//}
+
+		// ================== 테스트 =================
+		if (StartContactThread_Flat_RL())
+		{
+			Status_gui_str = _T("RL 기반 평면 경로 구동 쓰레드 시작!");
 			var_status_gui.SetWindowTextW(Status_gui_str);
 			SetTimer(1, 62, NULL);								// GUI 타이머
 		}
+		// ===========================================
 	}
 	//========================================
 	// 곡면 경로 구동 조건
 	else
 	{
 		// Contact 쓰레드 시작 (Curve 경로 구동)
-		if (StartContactThread_Curve()) {
+		if (StartContactThread_Curve()) 
+		{
 			Status_gui_str = _T("곡면 경로 구동 쓰레드 시작!");
 			var_status_gui.SetWindowTextW(Status_gui_str);
 			SetTimer(1, 62, NULL);								// GUI 타이머
@@ -1713,7 +2220,8 @@ void CRobotCommSWDJv5Dlg::UpdateGUI()
 		{ IDC_VAR_FREQ_GUI,        (float)var_freq_gui },
 		{ IDC_VAR_FREQ_SERVO,      (float)var_freq_servo },
 		{ IDC_VAR_FREQ_FT_SENSOR,  (float)var_freq_ft_sensor },
-		{ IDC_VAR_FREQ_MAIN,       (float)var_freq_main }
+		{ IDC_VAR_FREQ_MAIN,       (float)var_freq_main },
+		{ IDC_VAR_RESIDUAL_PRESSURE, (float)var_RL_Pressure }
 	};
 	for (auto& it : miscItems) {
 		CString txt;
@@ -2041,6 +2549,7 @@ void CRobotCommSWDJv5Dlg::OnBnClickedButTcpip()
 	{
 		Status_gui_str = _T("서버 연결 성공! 데이터 수신 대기 중...");
 		var_status_gui.SetWindowTextW(Status_gui_str);
+
 	}
 	else
 	{
@@ -2083,11 +2592,12 @@ void CRobotCommSWDJv5Dlg::OnRlDataReceived(const RLAgentPacket& packet)
 	// 모든 처리가 끝난 깨끗한 구조체를 바로 사용
 
 	// 원자적 멤버 변수에 값 저장 (스레드 안전)
-	m_receivedRlVoltage.store(packet.RL_ResidualP);
-	m_receivedConfirmFlag.store(packet.RL_MessagerecvFlag == 1);
+	m_received_RL_Pressure.store(packet.RL_ResidualP);
+	m_received_RL_Confirm_Flag.store(packet.RL_MessagerecvFlag == 1);
+	m_received_RL_Episode_Flag.store(packet.RL_EpisodeFlag == 1);
 
-	// GUI 업데이트
-	CString msg;
-	msg.Format(_T("RL 데이터 수신: Voltage=%.2f"), packet.RL_ResidualP);
-	var_status_gui.SetWindowTextW(msg);
+	//// GUI 업데이트
+	//CString msg;
+	//msg.Format(_T("RL 데이터 수신: Voltage=%.2f"), packet.RL_ResidualP);
+	//var_status_gui.SetWindowTextW(msg);
 }

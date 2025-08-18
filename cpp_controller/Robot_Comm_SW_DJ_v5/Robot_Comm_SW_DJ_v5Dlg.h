@@ -43,6 +43,10 @@ struct Flags {
 	std::atomic<bool> loadTraj{ false };					// false: 평면, true = 곡면
 	std::atomic<bool> flat_stop{ false };					// 평면 구동 정지 플래그
 	std::atomic<bool> curve_stop{ false };					// 곡면 구동 정지 플래그
+
+	std::atomic<bool> tcpip_flag{ false };					// TCP/IP 통신 연결 여부
+	std::atomic<bool> RL_pid_flag{ false };					// RL PID 제어 활성화 여부
+	std::atomic<bool> RL_sanderactive_flag{ false };		// RL Sander 활성화 여부
 };
 
 // 설정 구조체 정의
@@ -97,6 +101,12 @@ struct LogData {
 	std::vector<float> data;								// 로봇 상태 및 센서 데이터 저장용 배열
 };
 
+struct TCPIP {
+	std::atomic<float> rl_pressure_from_server{ 0.0f };		// RL 에이전트로부터 수신된 공압 데이터
+	std::atomic<bool> is_new_message_received{ false };		// RL 에이전트로부터 새로운 메세지 수신 여부
+};
+
+
 // CRobotCommSWDJv5Dlg 대화 상자
 class CRobotCommSWDJv5Dlg : public CDialogEx
 {
@@ -120,6 +130,11 @@ public:
 	static UINT Thread_Contact_Curve(LPVOID pParam);		// 곡면 구동 쓰레드
 	static UINT Thread_Logger(LPVOID pParam);				// 로그 데이터 저장 쓰레드
 
+	// ================== 테스트 =================
+	static UINT Thread_Contact_Flat_RL(LPVOID pParam);		// RL 기반 평면 구동 쓰레드
+	// ===========================================
+	// 
+	// 
 	// =========================================
 	// 버튼 핸들러
 	afx_msg void OnBnClickedButRobotConnect();				// 로봇 연결 버튼 핸들러
@@ -175,6 +190,11 @@ private:
 	bool StartContactThread_Curve();						// 곡면 구동 쓰레드 시작
 	void QuitAllThreads();									// 모든 쓰레드 종료
 
+	// ================== 테스트 =================
+	bool StartContactThread_Flat_RL();						// RL 기반 평면 구동 쓰레드 시작 (테스트)
+	// ===========================================
+
+
 	// ===============================
 	// 로봇 · 센서 상태 멤버
 	RobotState			m_robotState;						// 로봇 상태 관리	
@@ -192,12 +212,14 @@ private:
 	// ===============================
 	// TCP 통신
 	TcpClient m_tcpClient;
+	TCPIP m_tcpip;										// TCP/IP 통신 관련 변수
 	CString m_tcpReceivedData;
 	std::mutex m_tcpMutex;
 
 	// Python으로부터 받은 값을 저장할 멤버 변수
-	std::atomic<float> m_receivedRlVoltage{ 0.0f };
-	std::atomic<bool> m_receivedConfirmFlag{ false };
+	std::atomic<float> m_received_RL_Pressure{ 0.0f };		// RL 잔차 압력 값 [MPa]
+	std::atomic<bool> m_received_RL_Confirm_Flag{ false };	// RL 메시지 수신 플래그
+	std::atomic<bool> m_received_RL_Episode_Flag{ false };	// RL Episode Flag
 
 	// ===============================
 	//  쓰레드 핸들
@@ -247,4 +269,6 @@ private:
 	double var_chamber_volt_gui;							// 공압 챔버 전압 [V]
 	double var_spindle_air_gui;								// 스핀들 압력 [MPa]
 	double var_spindle_volt_gui;							// 스핀들 전압 [V]
+
+	double var_RL_Pressure;									// 서버(RL 에이전트)로부터 받은 잔차 압력 값 [MPa]
 };
