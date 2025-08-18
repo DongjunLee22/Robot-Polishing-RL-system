@@ -23,22 +23,30 @@ unsigned short calculate_crc16(const unsigned char* data, size_t length)
 }
 
 // Packing 함수
-std::vector<char> PackRobotStatus(float forceZ, float pressure, float voltage, float pidVal, unsigned char flag)
+std::vector<char> PackRobotStatus(float current_forceZ, float target_forceZ, float error_forceZ, float error_forceZ_dot, float error_forceZ_int,
+	float cur_chamber_P, unsigned char pid_Flag, unsigned char Sander_Flag)
 {
 	PythonCommPacket packet;
 	packet.sof = 0xAAAA;
-	packet.contactForceZ = forceZ;
-	packet.chamberPressure = pressure;
-	packet.chamberVoltage = voltage;
-	packet.pidControlValue = pidVal;
-	packet.pidFlag = flag;
+	packet.RL_currentForceZ = current_forceZ;
+	packet.RL_targetForceZ = target_forceZ;
+	packet.RL_forceZError = error_forceZ;
+	packet.RL_forceZErrordot = error_forceZ_dot;
+	packet.RL_forceZErrorintegral = error_forceZ_int;
+	packet.RL_currentChamberPressure = cur_chamber_P;
+	packet.RL_pidFlag = pid_Flag;
+	packet.RL_sanderactiveFlag = Sander_Flag;
 
 	// 바이트 순서 변환
 	packet.sof = htons(packet.sof);
-	*(unsigned long*)&packet.contactForceZ = htonl(*(unsigned long*)&packet.contactForceZ);
-	*(unsigned long*)&packet.chamberPressure = htonl(*(unsigned long*)&packet.chamberPressure);
-	*(unsigned long*)&packet.chamberVoltage = htonl(*(unsigned long*)&packet.chamberVoltage);
-	*(unsigned long*)&packet.pidControlValue = htonl(*(unsigned long*)&packet.pidControlValue);
+	*(unsigned long*)&packet.RL_currentForceZ = htonl(*(unsigned long*)&packet.RL_currentForceZ);
+	*(unsigned long*)&packet.RL_targetForceZ = htonl(*(unsigned long*)&packet.RL_targetForceZ);
+	*(unsigned long*)&packet.RL_forceZError = htonl(*(unsigned long*)&packet.RL_forceZError);
+	*(unsigned long*)&packet.RL_forceZErrordot = htonl(*(unsigned long*)&packet.RL_forceZErrordot);
+	*(unsigned long*)&packet.RL_forceZErrorintegral = htonl(*(unsigned long*)&packet.RL_forceZErrorintegral);
+	*(unsigned long*)&packet.RL_currentChamberPressure = htonl(*(unsigned long*)&packet.RL_currentChamberPressure);
+	*(unsigned long*)&packet.RL_pidFlag = htonl(*(unsigned long*)&packet.RL_pidFlag);
+	*(unsigned long*)&packet.RL_sanderactiveFlag = htonl(*(unsigned long*)&packet.RL_sanderactiveFlag);
 
 	// 체크섬 계산 및 설정
 	packet.checksum = calculate_crc16((const unsigned char*)&packet, sizeof(packet) - sizeof(unsigned short));
@@ -73,11 +81,11 @@ bool UnpackRLAgentCommand(const char* buffer, int length, RLAgentPacket& outPack
 	// 2. 바이트 순서 변환 (Network to Host)
 	outPacket.sof = ntohs(received_packet.sof);
 
-	float rl_voltage = received_packet.rlVoltageValue;
-	*(unsigned long*)&rl_voltage = ntohl(*(unsigned long*)&rl_voltage);
-	outPacket.rlVoltageValue = rl_voltage;
+	float rl_Pressure = received_packet.RL_ResidualP;
+	*(unsigned long*)&rl_Pressure = ntohl(*(unsigned long*)&rl_Pressure);
+	outPacket.RL_ResidualP = rl_Pressure;
 
-	outPacket.confirmFlag = received_packet.confirmFlag;
+	outPacket.RL_MessagerecvFlag = received_packet.RL_MessagerecvFlag;
 	outPacket.checksum = received_checksum; // 호스트 바이트 순서로 저장
 
 	return true;

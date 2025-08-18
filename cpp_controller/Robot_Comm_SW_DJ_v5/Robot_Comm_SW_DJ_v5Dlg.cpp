@@ -2060,8 +2060,8 @@ void CRobotCommSWDJv5Dlg::OnBnClickedButTcpsend()
 	}
 
 	// 2. 헬퍼 함수를 호출하여 테스트용 데이터로 전송 패킷을 생성합니다.
-	std::vector<char> packetToSend = PackRobotStatus( // 이름이 바뀐 함수 호출
-		-12.34f, 56.78f, 90.12f, -9.87f, 1
+	std::vector<char> packetToSend = PackRobotStatus(
+		-12.34f, 56.78f, 90.12f, -9.87f, 40.4f, 12.03f, 1, 1
 	);
 
 	// 3. 생성된 이진 패킷을 전송합니다.
@@ -2083,11 +2083,11 @@ void CRobotCommSWDJv5Dlg::OnRlDataReceived(const RLAgentPacket& packet)
 	// 모든 처리가 끝난 깨끗한 구조체를 바로 사용
 
 	// 원자적 멤버 변수에 값 저장 (스레드 안전)
-	m_receivedRlVoltage.store(packet.rlVoltageValue);
-	m_receivedConfirmFlag.store(packet.confirmFlag == 1);
+	m_receivedRlVoltage.store(packet.RL_ResidualP);
+	m_receivedConfirmFlag.store(packet.RL_MessagerecvFlag == 1);
 
 	// GUI 업데이트
 	CString msg;
-	msg.Format(_T("RL 데이터 수신: Voltage=%.2f"), packet.rlVoltageValue);
+	msg.Format(_T("RL 데이터 수신: Voltage=%.2f"), packet.RL_ResidualP);
 	var_status_gui.SetWindowTextW(msg);
 }

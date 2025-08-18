@@ -16,7 +16,6 @@
 // 2) 외부 SDK 헤더
 #include <vcisdk.h>
 #include <NIDAQmx.h>
-//#include <Eigen/Dense>
 
 // 3) Windows 헤더
 #include <windows.h>
