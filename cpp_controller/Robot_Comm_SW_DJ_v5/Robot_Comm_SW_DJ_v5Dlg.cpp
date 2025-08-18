@@ -10,6 +10,7 @@
 // 1) 프리컴파일 헤더
 #include "pch.h"
 #define NOMINMAX
+#include <random>
 
 // 2) 외부(SDK) 헤더
 #include "DRFLEx.h"
@@ -1446,7 +1447,29 @@ UINT CRobotCommSWDJv5Dlg::Thread_Contact_Flat_RL(LPVOID pParam)
 		auto Th_sensorData_flat = g_pDlg->m_ftSensor.getSnapshot();
 
 		// =========================================================================
-		// 1. 서버로 데이터 송신
+		// 1. 서버로부터 데이터 수신
+		// =========================================================================
+		g_pDlg->m_tcpip.episode_state_flag = g_pDlg->m_received_RL_Episode_Flag.load();
+
+		if (g_pDlg->m_tcpip.episode_state_flag.load() == true)
+		{
+			//g_pDlg->m_setting.Target_Force_N.store(-30.0f);
+			std::random_device rd;
+			std::mt19937 gen(rd());
+			std::uniform_int_distribution<> dist(30, 50);
+			int random_force = dist(gen);
+			g_pDlg->m_setting.Target_Force_N.store(-1.0f * random_force);
+		}
+
+		g_pDlg->m_tcpip.is_new_message_received = g_pDlg->m_received_RL_Confirm_Flag.load();
+		if (g_pDlg->m_tcpip.is_new_message_received)
+		{
+			g_pDlg->m_tcpip.rl_pressure_from_server = g_pDlg->m_received_RL_Pressure.load();
+			g_pDlg->m_received_RL_Confirm_Flag.store(false);
+		}
+
+		// =========================================================================
+		// 2. 서버로 데이터 송신
 		// =========================================================================
 		// 서버로 보낼 메세지 생성
 		float current_force_z = Th_sensorData_flat.filteredForce[2];
@@ -1477,16 +1500,6 @@ UINT CRobotCommSWDJv5Dlg::Thread_Contact_Flat_RL(LPVOID pParam)
 		if (g_pDlg->m_tcpClient.IsConnected())
 		{
 			g_pDlg->m_tcpClient.Send(packetToSend.data(), packetToSend.size());
-		}
-
-		// =========================================================================
-		// 2. 서버로부터 데이터 수신
-		// =========================================================================
-		g_pDlg->m_tcpip.is_new_message_received = g_pDlg->m_received_RL_Confirm_Flag.load();
-		if (g_pDlg->m_tcpip.is_new_message_received)
-		{
-			g_pDlg->m_tcpip.rl_pressure_from_server = g_pDlg->m_received_RL_Pressure.load();
-			g_pDlg->m_received_RL_Confirm_Flag.store(false);
 		}
 
 		// =========================================================================
