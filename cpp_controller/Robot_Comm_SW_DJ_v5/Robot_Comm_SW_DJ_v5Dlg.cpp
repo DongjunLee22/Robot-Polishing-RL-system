@@ -2041,9 +2041,6 @@ void CRobotCommSWDJv5Dlg::OnBnClickedButTcpip()
 	{
 		Status_gui_str = _T("서버 연결 성공! 데이터 수신 대기 중...");
 		var_status_gui.SetWindowTextW(Status_gui_str);
-
-		// 테스트를 위해 연결 성공 시 메시지를 보낼 수 있습니다.
-		//m_tcpClient.Send(_T("Hello from MFC Client!"));
 	}
 	else
 	{
