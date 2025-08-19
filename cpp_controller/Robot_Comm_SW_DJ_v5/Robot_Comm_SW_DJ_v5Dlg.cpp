@@ -1478,7 +1478,6 @@ UINT CRobotCommSWDJv5Dlg::Thread_Contact_Flat_RL(LPVOID pParam)
 		float current_force_z = Th_sensorData_flat.filteredForce[2];
 		float target_force_z = g_pDlg->m_setting.Target_Force_N.load();
 		float error_force_z = target_force_z - current_force_z;
-		float current_chamber_p = (float)g_pDlg->m_airctrl.desiredChamberPressure();
 		float error_force_z_dot = (error_force_z - RL_previous_error_force_z) / RL_dt; // 접촉력 오차 미분값
 		RL_previous_error_force_z = error_force_z;
 		RL_integral_error_force_z += error_force_z * RL_dt;
@@ -1488,6 +1487,7 @@ UINT CRobotCommSWDJv5Dlg::Thread_Contact_Flat_RL(LPVOID pParam)
 		else if (RL_integral_error_force_z < RL_min_integral_limit) {
 			RL_integral_error_force_z = RL_min_integral_limit;
 		};
+		auto current_chamber_p = (float)g_pDlg->m_airctrl.desiredChamberPressure();
 
 		std::vector<char> packetToSend = PackRobotStatus(
 			current_force_z,

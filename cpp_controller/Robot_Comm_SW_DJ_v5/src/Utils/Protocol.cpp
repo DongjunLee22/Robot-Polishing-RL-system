@@ -24,7 +24,7 @@ unsigned short calculate_crc16(const unsigned char* data, size_t length)
 
 // Packing 함수
 std::vector<char> PackRobotStatus(float current_forceZ, float target_forceZ, float error_forceZ, float error_forceZ_dot, float error_forceZ_int,
-	float cur_chamber_P, unsigned char Sander_Flag)
+	float cur_PID_output, unsigned char Sander_Flag)
 {
 	PythonCommPacket packet;
 	packet.sof = 0xAAAA;
@@ -33,7 +33,7 @@ std::vector<char> PackRobotStatus(float current_forceZ, float target_forceZ, flo
 	packet.RL_forceZError = error_forceZ;
 	packet.RL_forceZErrordot = error_forceZ_dot;
 	packet.RL_forceZErrorintegral = error_forceZ_int;
-	packet.RL_currentChamberPressure = cur_chamber_P;
+	packet.RL_currentPID = cur_PID_output;
 	packet.RL_sanderactiveFlag = Sander_Flag;
 
 	// 바이트 순서 변환
@@ -43,7 +43,7 @@ std::vector<char> PackRobotStatus(float current_forceZ, float target_forceZ, flo
 	*(unsigned long*)&packet.RL_forceZError = htonl(*(unsigned long*)&packet.RL_forceZError);
 	*(unsigned long*)&packet.RL_forceZErrordot = htonl(*(unsigned long*)&packet.RL_forceZErrordot);
 	*(unsigned long*)&packet.RL_forceZErrorintegral = htonl(*(unsigned long*)&packet.RL_forceZErrorintegral);
-	*(unsigned long*)&packet.RL_currentChamberPressure = htonl(*(unsigned long*)&packet.RL_currentChamberPressure);
+	*(unsigned long*)&packet.RL_currentPID = htonl(*(unsigned long*)&packet.RL_currentPID);
 	*(unsigned long*)&packet.RL_sanderactiveFlag = htonl(*(unsigned long*)&packet.RL_sanderactiveFlag);
 
 	// 체크섬 계산 및 설정

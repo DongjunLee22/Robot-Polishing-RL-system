@@ -10,7 +10,7 @@ struct PythonCommPacket {
 	float           RL_forceZError;				// z방향 접촉력 오차 (4 bytes)
 	float           RL_forceZErrordot;			// z방향 접촉력 오차의 미분값 (4 bytes)
 	float           RL_forceZErrorintegral;		// z방향 접촉력 오차의 적분값 (4 bytes)
-	float           RL_currentChamberPressure;	// 현재 공압 챔버 압력 (4 bytes)
+	float           RL_currentPID;				// 현재 공압 챔버 제어 압력값 (4 bytes)
 	unsigned char   RL_sanderactiveFlag;		// Sander 동작 여부 플래그 (1 byte)
 	unsigned short  checksum;					// 데이터 무결성 검증 (2 bytes)
 };
@@ -35,8 +35,9 @@ struct RLAgentPacket {
 unsigned short calculate_crc16(const unsigned char* data, size_t length);
 
 // PythonCommPacket을 전송용 바이트 벡터로 변환 (Packing)
-std::vector<char> PackRobotStatus(float current_forceZ, float target_forceZ, float error_forceZ, float error_forceZ_dot, float error_forceZ_int,
-	float cur_chamber_P, unsigned char Sander_Flag);
+std::vector<char> PackRobotStatus(float current_forceZ, float target_forceZ,
+	float error_forceZ, float error_forceZ_dot, float error_forceZ_int,
+	float cur_PID_output, unsigned char Sander_Flag);
 
 // 수신된 바이트 데이터를 RLAgentPacket 구조체로 변환 (Unpacking)
 // 성공 시 true, 체크섬 오류 등 실패 시 false 반환
