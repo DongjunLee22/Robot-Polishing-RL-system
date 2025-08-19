@@ -1612,16 +1612,6 @@ UINT CRobotCommSWDJv5Dlg::Thread_Contact_Flat_RL(LPVOID pParam)
 					// PID 컨트롤러 리셋
 					g_pDlg->m_pidctrl.reset();
 
-					// Ki 게인이 0이 아니어야 Integral 항 설정이 의미가 있음
-					if (g_pDlg->m_pidctrl.getKi() > 0) {
-						// 저장해둔 초기 PID 출력값을 Ki로 나누어 초기 Integral 항 값을 계산합니다.
-						// (PID 공식에서 output에 Integral 기여분은 ki * integral 이므로)
-						double initial_integral = g_pDlg->m_pidInitialOutput_N / g_pDlg->m_pidctrl.getKi();
-
-						// 새로 만든 함수를 이용해 Integral 항을 설정합니다.
-						g_pDlg->m_pidctrl.setIntegral(initial_integral);
-					}
-
 					Status_gui_str.Format(_T("[평면 구동] Control Step 2: 평면 구동 & PID 힘 제어 시작"));
 					g_pDlg->var_status_gui.SetWindowTextW(Status_gui_str);
 				}
@@ -1645,16 +1635,16 @@ UINT CRobotCommSWDJv5Dlg::Thread_Contact_Flat_RL(LPVOID pParam)
 						actual_dt = 0.01;
 					}
 
-					double setpoint_force = abs(g_pDlg->m_setting.Target_Force_N.load());					// [N] 목표 접촉력 (양수로 설정)
-					double measured_force = abs(Th_sensorData_flat.filteredForce[2]);						// [N] 측정된 접촉력 (양수로 설정)
+					double current_force = Th_sensorData_flat.filteredForce[2];						// [N] 측정된 접촉력
+					double setpoint_force = g_pDlg->m_setting.Target_Force_N.load();					// [N] 목표 접촉력
 
 					// PID 제어기 계산
-					PIDController::Result result = g_pDlg->m_pidctrl.calculate(setpoint_force, measured_force, actual_dt);
+					PIDController::Result result = g_pDlg->m_pidctrl.calculate(setpoint_force, current_force, actual_dt);
 
 					double force_correction_N = result.output;												// [N] PID 제어기 오차 기반 접촉력 보정값 (PID 출력값)
 
 					// 접촉력 => 공압 변환
-					double pressure_correction_mpa = force_correction_N / A_m2 * 1e-6;						// [MPa] 공압 보정값 (N -> MPa 변환)
+					double pressure_correction_mpa = -force_correction_N / A_m2 * 1e-6;						// [MPa] 공압 보정값 (N -> MPa 변환)
 					double new_target_pressure_mpa = base_pressure_mpa + pressure_correction_mpa;			// [MPa] 새로운 목표 공압값 (기본 압력 + 보정값)
 					new_target_pressure_mpa = std::clamp(new_target_pressure_mpa, 0.0, 0.4);				// [MPa] 공압 제한 (0.0 ~ 0.4 MPa)
 
