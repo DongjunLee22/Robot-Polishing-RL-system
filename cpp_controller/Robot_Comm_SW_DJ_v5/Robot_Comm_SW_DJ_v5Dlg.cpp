@@ -1409,17 +1409,11 @@ UINT CRobotCommSWDJv5Dlg::Thread_Contact_Flat_RL(LPVOID pParam)
 	static float initialChamberPressure = 0.0f;
 
 	// ===============================================
-	// PID 제어기 관련 변수 초기화
-	const double base_pressure_mpa = 0.2;						// MFT 초기 기본 압력 (MPa) => 최대 0.4MPa까지 가압 가능
-	const double MFT_diameter_mm = 94.9;						// MFT 직경 (mm)
-	double MFT_radius_m = MFT_diameter_mm / 2.0 * 1e-3;		// MFT 반지름 (m)					
-	double A_m2 = M_PI * MFT_radius_m * MFT_radius_m;			// MFT 단면적 (m^2)
-
 	// PID 게인 및 바운드 설정
 	g_pDlg->m_pidctrl.setGains(
-		10.0,			// Kp
-		1.0,			// Ki
-		0.0);			// Kd
+		80.0,			// Kp
+		130.0,			// Ki
+		0.5);			// Kd
 	g_pDlg->m_pidctrl.setOutputLimits(
 		-1500.0,		// min
 		1500.0);		// max
@@ -1644,8 +1638,8 @@ UINT CRobotCommSWDJv5Dlg::Thread_Contact_Flat_RL(LPVOID pParam)
 					double force_correction_N = result.output;												// [N] PID 제어기 오차 기반 접촉력 보정값 (PID 출력값)
 
 					// 접촉력 => 공압 변환
-					double pressure_correction_mpa = -force_correction_N / A_m2 * 1e-6;						// [MPa] 공압 보정값 (N -> MPa 변환)
-					double new_target_pressure_mpa = base_pressure_mpa + pressure_correction_mpa;			// [MPa] 새로운 목표 공압값 (기본 압력 + 보정값)
+					double pressure_correction_mpa = -force_correction_N / g_pDlg->m_airctrl.getA_m2() * 1e-6;						// [MPa] 공압 보정값 (N -> MPa 변환)
+					double new_target_pressure_mpa = g_pDlg->m_airctrl.get_base_pressure_mpa() + pressure_correction_mpa;			// [MPa] 새로운 목표 공압값 (기본 압력 + 보정값)
 					new_target_pressure_mpa = std::clamp(new_target_pressure_mpa, 0.0, 0.4);				// [MPa] 공압 제한 (0.0 ~ 0.4 MPa)
 
 					g_pDlg->m_airctrl.setDesiredChamberPressure(new_target_pressure_mpa);					// [MPa] 출력 챔버 공압 설정

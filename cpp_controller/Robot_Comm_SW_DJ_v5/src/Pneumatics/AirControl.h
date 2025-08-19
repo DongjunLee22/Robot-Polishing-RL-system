@@ -44,7 +44,7 @@ public:
 
 		double max_force_N = maxChamberPressureMPa * 1e6 * A_m2;    // 최대 힘 (N 단위) => Chamber 공압에 따른 최대 힘        
 		double pid_limit = max_force_N * 1.2;
-
+		const double base_pressure_mpa = 0.2;
 
 		// --- DAQ 샘플링 및 콜백 설정 ---
 		uInt64 sampleRateHz = 1000;
@@ -55,8 +55,9 @@ public:
 	explicit AirControl(const Config& config = Config{});
 	~AirControl() { releaseTasks(); }
 
-	// MFT 단면적 getter 메서드 추가
+	//getter 메서드 추가
 	double getA_m2() const noexcept { return m_config.A_m2; }
+	double get_base_pressure_mpa() const noexcept { return m_config.base_pressure_mpa; }
 
 	// 현재 사용 중인 태스크를 초기화하고 시작
 	bool initTasks();
