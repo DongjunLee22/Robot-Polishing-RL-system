@@ -1526,8 +1526,6 @@ UINT CRobotCommSWDJv5Dlg::Thread_Contact_Flat_RL(LPVOID pParam)
 			// Control Step.0: 툴을 금형 시편에 접촉하기 위한 하강 동작
 			if (g_pDlg->m_setting.Control_Step == 0)
 			{
-				printf("Check 4\n");
-
 				if (g_pDlg->m_setting.First_Contact.load() == true) {
 					// 1. 상태 초기화
 					rampStartTime = std::chrono::system_clock::now();
@@ -1614,8 +1612,7 @@ UINT CRobotCommSWDJv5Dlg::Thread_Contact_Flat_RL(LPVOID pParam)
 					// PID 컨트롤러 리셋
 					g_pDlg->m_pidctrl.reset();
 
-					// Ki 게인이 0이 아니어야 Integral 항 설정이 의미가 있습니다.
-					// Ki가 0이라면 이 방법은 효과가 없으며, 다른 방법을 사용해야 합니다.
+					// Ki 게인이 0이 아니어야 Integral 항 설정이 의미가 있음
 					if (g_pDlg->m_pidctrl.getKi() > 0) {
 						// 저장해둔 초기 PID 출력값을 Ki로 나누어 초기 Integral 항 값을 계산합니다.
 						// (PID 공식에서 output에 Integral 기여분은 ki * integral 이므로)
@@ -1624,8 +1621,6 @@ UINT CRobotCommSWDJv5Dlg::Thread_Contact_Flat_RL(LPVOID pParam)
 						// 새로 만든 함수를 이용해 Integral 항을 설정합니다.
 						g_pDlg->m_pidctrl.setIntegral(initial_integral);
 					}
-
-					//g_pDlg->m_setting.Target_Force_N.store(-30.0f);			// 목표 접촉력 변경 [N]
 
 					Status_gui_str.Format(_T("[평면 구동] Control Step 2: 평면 구동 & PID 힘 제어 시작"));
 					g_pDlg->var_status_gui.SetWindowTextW(Status_gui_str);
@@ -2578,31 +2573,31 @@ void CRobotCommSWDJv5Dlg::OnBnClickedButTcpip()
 
 void CRobotCommSWDJv5Dlg::OnBnClickedButTcpsend()
 {
-	// 1. 서버에 연결되어 있는지 먼저 확인합니다.
-	if (!m_tcpClient.IsConnected())
-	{
-		Status_gui_str = _T("서버에 연결되어 있지 않습니다. 먼저 TCP/IP 연결을 시도하세요.");
-		var_status_gui.SetWindowTextW(Status_gui_str);
-		return;
-	}
+	//// 1. 서버에 연결되어 있는지 먼저 확인합니다.
+	//if (!m_tcpClient.IsConnected())
+	//{
+	//	Status_gui_str = _T("서버에 연결되어 있지 않습니다. 먼저 TCP/IP 연결을 시도하세요.");
+	//	var_status_gui.SetWindowTextW(Status_gui_str);
+	//	return;
+	//}
 
-	// 2. 헬퍼 함수를 호출하여 테스트용 데이터로 전송 패킷을 생성합니다.
-	std::vector<char> packetToSend = PackRobotStatus(
-		-12.34f, 56.78f, 90.12f, -9.87f, 40.4f, 12.03f, 1
-	);
+	//// 2. 헬퍼 함수를 호출하여 테스트용 데이터로 전송 패킷을 생성합니다.
+	//std::vector<char> packetToSend = PackRobotStatus(
+	//	-12.34f, 56.78f, 90.12f, -9.87f, 40.4f, 12.03f, 1
+	//);
 
-	// 3. 생성된 이진 패킷을 전송합니다.
-	if (m_tcpClient.Send(packetToSend.data(), packetToSend.size()))
-	{
-		// CString::Format을 사용하여 문자열을 안전하게 포맷팅합니다.
-		Status_gui_str.Format(_T("테스트 이진 패킷(%d bytes)을 성공적으로 전송했습니다."), packetToSend.size());
-		var_status_gui.SetWindowTextW(Status_gui_str);
-	}
-	else
-	{
-		Status_gui_str = _T("테스트 패킷 전송에 실패했습니다.");
-		var_status_gui.SetWindowTextW(Status_gui_str);
-	}
+	//// 3. 생성된 이진 패킷을 전송합니다.
+	//if (m_tcpClient.Send(packetToSend.data(), packetToSend.size()))
+	//{
+	//	// CString::Format을 사용하여 문자열을 안전하게 포맷팅합니다.
+	//	Status_gui_str.Format(_T("테스트 이진 패킷(%d bytes)을 성공적으로 전송했습니다."), packetToSend.size());
+	//	var_status_gui.SetWindowTextW(Status_gui_str);
+	//}
+	//else
+	//{
+	//	Status_gui_str = _T("테스트 패킷 전송에 실패했습니다.");
+	//	var_status_gui.SetWindowTextW(Status_gui_str);
+	//}
 }
 
 void CRobotCommSWDJv5Dlg::OnRlDataReceived(const RLAgentPacket& packet)
