@@ -19,3 +19,5 @@ git pull origin main
 git switch rl
 # rl 브랜치의 기반을 최신 main으로 재설정함
 git rebase main
+
+test
