@@ -1455,6 +1455,7 @@ UINT CRobotCommSWDJv5Dlg::Thread_Contact_Flat_RL(LPVOID pParam)
 			std::mt19937 gen(rd());
 			std::uniform_int_distribution<> dist(30, 50);
 			int random_force = dist(gen);
+
 			g_pDlg->m_setting.Target_Force_N.store(-1.0f * random_force);
 		}
 

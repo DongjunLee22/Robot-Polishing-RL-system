@@ -16,10 +16,13 @@ RL_ep_flag = data(:,end);
 figure;
 subplot(3,1,1);
 plot(t,RL_u);
+xlim([0 t(end)]);
 ylabel('RL u')
 subplot(3,1,2);
 plot(t,RL_send_flag);
+xlim([0 t(end)]);
 ylabel('Send Message Flag');
 subplot(3,1,3);
 plot(t,RL_ep_flag);
+xlim([0 t(end)]);
 ylabel('Episode Flag');
