@@ -10,6 +10,7 @@
 // 1) 프리컴파일 헤더
 #include "pch.h"
 #define NOMINMAX
+#include <random>
 
 // 2) 외부(SDK) 헤더
 #include "DRFLEx.h"
@@ -360,29 +361,32 @@ bool CRobotCommSWDJv5Dlg::StartContactThread_Flat_RL()
 	{
 		Status_gui_str = _T("공압 시스템 연결이 되지 않았으므로 공압 시스템을 연결합니다...");
 		var_status_gui.SetWindowTextW(Status_gui_str);
-		OnBnClickedButAirOn();
+		//OnBnClickedButAirOn();
 		return false;
 	}
 	if (!m_flags.ftRunning.load())								// FT 센서가 연결되지 않은 경우 경고 알림 처리
 	{
 		Status_gui_str = _T("FT 센서 연결이 되지 않았으므로 FT 센서를 연결합니다...");
 		var_status_gui.SetWindowTextW(Status_gui_str);
-		OnBnClickedButFtSensorOn();
+		//OnBnClickedButFtSensorOn();
 		return false;
 	}
-	
-	if (!m_flags.tcpip_flag.load())
-	{
-		Status_gui_str = _T("서버와의 통신이 연결되지 않았으므로 서버와 통신을 연결합니다...");
-		var_status_gui.SetWindowTextW(Status_gui_str);
-		OnBnClickedButTcpip();
-		return false;
-	}
-	
+
+	//if (!m_flags.tcpip_flag.load())
+	//{
+	//	Status_gui_str = _T("서버와의 통신이 연결되지 않았으므로 서버와 통신을 연결합니다...");
+	//	var_status_gui.SetWindowTextW(Status_gui_str);
+	//	OnBnClickedButTcpip();
+	//	//return false;
+	//}
+	//OnBnClickedButTcpip();
 
 	// 2) 로봇 구동 쓰레드 시작
 	m_flags.robotRunning.store(true);							// 로봇 구동 루프 ON
 	m_pThread_FC = AfxBeginThread(Thread_Contact_Flat_RL, this);	// 로봇 구동 쓰레드 시작
+
+	printf("Thread Start 2\n");
+
 	if (!m_pThread_FC)											// 쓰레드 생성 실패 처리
 	{
 		m_flags.robotRunning.store(false);
@@ -1437,6 +1441,8 @@ UINT CRobotCommSWDJv5Dlg::Thread_Contact_Flat_RL(LPVOID pParam)
 
 	t_start = system_clock::now();
 
+	printf("Check 1\n");
+
 	while (g_pDlg->m_flags.robotRunning.load())
 	{
 		auto ts = std::chrono::steady_clock::now();
@@ -1445,14 +1451,38 @@ UINT CRobotCommSWDJv5Dlg::Thread_Contact_Flat_RL(LPVOID pParam)
 		auto Th_robotData_flat = g_pDlg->m_robotState.getSnapshot();
 		auto Th_sensorData_flat = g_pDlg->m_ftSensor.getSnapshot();
 
+		printf("Check 2\n");
+
 		// =========================================================================
-		// 1. 서버로 데이터 송신
+		// 1. 서버로부터 데이터 수신
+		// =========================================================================
+		g_pDlg->m_tcpip.episode_state_flag = g_pDlg->m_received_RL_Episode_Flag.load();
+
+		if (g_pDlg->m_tcpip.episode_state_flag.load() == true)
+		{
+			//g_pDlg->m_setting.Target_Force_N.store(-30.0f);
+			std::random_device rd;
+			std::mt19937 gen(rd());
+			std::uniform_int_distribution<> dist(30, 50);
+			int random_force = dist(gen);
+			g_pDlg->m_setting.Target_Force_N.store(-1.0f * random_force);
+		}
+
+		g_pDlg->m_tcpip.is_new_message_received = g_pDlg->m_received_RL_Confirm_Flag.load();
+		if (g_pDlg->m_tcpip.is_new_message_received.load() == true)
+		{
+			g_pDlg->m_tcpip.rl_pressure_from_server = g_pDlg->m_received_RL_Pressure.load();
+			g_pDlg->m_received_RL_Confirm_Flag.store(false);
+		}
+
+		// =========================================================================
+		// 2. 서버로 데이터 송신
 		// =========================================================================
 		// 서버로 보낼 메세지 생성
 		float current_force_z = Th_sensorData_flat.filteredForce[2];
 		float target_force_z = g_pDlg->m_setting.Target_Force_N.load();
 		float error_force_z = target_force_z - current_force_z;
-		float current_chamber_p = (float)g_pDlg->m_airctrl.feedbackChamberPressure();
+		float current_chamber_p = (float)g_pDlg->m_airctrl.desiredChamberPressure();
 		float error_force_z_dot = (error_force_z - RL_previous_error_force_z) / RL_dt; // 접촉력 오차 미분값
 		RL_previous_error_force_z = error_force_z;
 		RL_integral_error_force_z += error_force_z * RL_dt;
@@ -1470,7 +1500,6 @@ UINT CRobotCommSWDJv5Dlg::Thread_Contact_Flat_RL(LPVOID pParam)
 			error_force_z_dot,
 			RL_integral_error_force_z,
 			current_chamber_p,
-			g_pDlg->m_flags.RL_pid_flag.load(),
 			g_pDlg->m_flags.RL_sanderactive_flag.load());
 
 		// 서버로 메세지 전송
@@ -1479,15 +1508,7 @@ UINT CRobotCommSWDJv5Dlg::Thread_Contact_Flat_RL(LPVOID pParam)
 			g_pDlg->m_tcpClient.Send(packetToSend.data(), packetToSend.size());
 		}
 
-		// =========================================================================
-		// 2. 서버로부터 데이터 수신
-		// =========================================================================
-		g_pDlg->m_tcpip.is_new_message_received = g_pDlg->m_received_RL_Confirm_Flag.load();
-		if (g_pDlg->m_tcpip.is_new_message_received)
-		{
-			g_pDlg->m_tcpip.rl_pressure_from_server = g_pDlg->m_received_RL_Pressure.load();
-			g_pDlg->m_received_RL_Confirm_Flag.store(false);
-		}
+		printf("Check 3\n");
 
 		// =========================================================================
 		// 3. 로봇 구동제어
@@ -1507,9 +1528,12 @@ UINT CRobotCommSWDJv5Dlg::Thread_Contact_Flat_RL(LPVOID pParam)
 				g_pDlg->m_setting.First_Contact.store(true);
 				g_pDlg->m_flags.flat_stop.store(false);
 			}
+
 			// Control Step.0: 툴을 금형 시편에 접촉하기 위한 하강 동작
 			if (g_pDlg->m_setting.Control_Step == 0)
 			{
+				printf("Check 4\n");
+
 				if (g_pDlg->m_setting.First_Contact.load() == true) {
 					// 1. 상태 초기화
 					rampStartTime = std::chrono::system_clock::now();
@@ -1586,11 +1610,10 @@ UINT CRobotCommSWDJv5Dlg::Thread_Contact_Flat_RL(LPVOID pParam)
 				if (g_pDlg->m_setting.First_Contact.load() == true)
 				{
 					// 서버로 보내기 위한 플래그 설정
-					g_pDlg->m_flags.RL_pid_flag.store(true);
 					g_pDlg->m_flags.RL_sanderactive_flag.store(true);
 
 					g_pDlg->m_setting.First_Contact.store(false);
-					g_pDlg->m_setting.vx_mms.store(5.0);					// X축에 대한 이동 방향 & 속도 설정
+					g_pDlg->m_setting.vx_mms.store(0.0);					// X축에 대한 이동 방향 & 속도 설정
 
 					g_pDlg->m_airctrl.setDesiredSpindlePressure(0.0);
 
@@ -1608,7 +1631,7 @@ UINT CRobotCommSWDJv5Dlg::Thread_Contact_Flat_RL(LPVOID pParam)
 						g_pDlg->m_pidctrl.setIntegral(initial_integral);
 					}
 
-					g_pDlg->m_setting.Target_Force_N.store(-30.0f);			// 목표 접촉력 변경 [N]
+					//g_pDlg->m_setting.Target_Force_N.store(-30.0f);			// 목표 접촉력 변경 [N]
 
 					Status_gui_str.Format(_T("[평면 구동] Control Step 2: 평면 구동 & PID 힘 제어 시작"));
 					g_pDlg->var_status_gui.SetWindowTextW(Status_gui_str);
@@ -1674,7 +1697,6 @@ UINT CRobotCommSWDJv5Dlg::Thread_Contact_Flat_RL(LPVOID pParam)
 					// 1. 상태 초기화
 					rampStartTime = system_clock::now();
 					g_pDlg->m_setting.First_Contact.store(false);
-					g_pDlg->m_flags.RL_pid_flag.store(false);
 					g_pDlg->m_flags.RL_sanderactive_flag.store(false);
 
 					// 2. 동작 시작 시점의 상태 저장
@@ -2110,6 +2132,8 @@ void CRobotCommSWDJv5Dlg::OnBnClickedButForceControl()
 		OnBnClickedButFtSensorOn();
 		Sleep(1000);
 	}
+
+	OnBnClickedButTcpip();
 
 	//========================================
 	// 평면 경로 구동 조건
@@ -2549,7 +2573,7 @@ void CRobotCommSWDJv5Dlg::OnBnClickedButTcpip()
 	{
 		Status_gui_str = _T("서버 연결 성공! 데이터 수신 대기 중...");
 		var_status_gui.SetWindowTextW(Status_gui_str);
-
+		m_flags.tcpip_flag.store(true);
 	}
 	else
 	{
@@ -2570,7 +2594,7 @@ void CRobotCommSWDJv5Dlg::OnBnClickedButTcpsend()
 
 	// 2. 헬퍼 함수를 호출하여 테스트용 데이터로 전송 패킷을 생성합니다.
 	std::vector<char> packetToSend = PackRobotStatus(
-		-12.34f, 56.78f, 90.12f, -9.87f, 40.4f, 12.03f, 1, 1
+		-12.34f, 56.78f, 90.12f, -9.87f, 40.4f, 12.03f, 1
 	);
 
 	// 3. 생성된 이진 패킷을 전송합니다.

@@ -104,6 +104,7 @@ struct LogData {
 struct TCPIP {
 	std::atomic<float> rl_pressure_from_server{ 0.0f };		// RL 에이전트로부터 수신된 공압 데이터
 	std::atomic<bool> is_new_message_received{ false };		// RL 에이전트로부터 새로운 메세지 수신 여부
+	std::atomic<bool> episode_state_flag{ false };		// RL 에이전트로부터 에피소드 상태 수신 여부
 };
 
 
