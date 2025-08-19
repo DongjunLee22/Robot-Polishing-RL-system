@@ -30,7 +30,7 @@
 ### 3.1. C++ Client → Python Server (로봇 상태 보고)
 
 - **구조체명**: `PythonCommPacket`
-- **총 크기**: **21 bytes**
+- **총 크기**: **29 bytes**
 - **SOF (Start of Frame)**: `0xAAAA`
 
 | 필드명               | 데이터 타입        | 크기 (bytes) | 설명                                           |
@@ -41,8 +41,7 @@
 | `Force Error`        | `float`            | 4            | 접촉력 오차 (단위: N)                          |
 | `Force Error dot`    | `float`            | 4            | 접촉력 오차의 미분 값 (단위: N)                 |
 | `Force Error int`    | `float`            | 4            | 접촉력 오차의 적분 값 (단위: N)                |
-| `Current Pressure`   | `float`            | 4            | P공압 챔버 압력 (단위: MPa)                    |
-| `pidFlag`            | `unsigned char`    | 1            | PID 제어기 활성화 상태 (0: 비활성, 1: 활성)     |
+| `pidoutput'          | `float`            | 1            | PID 제어 값                                    |
 | `Sander Active Flag` | `unsigned char`    | 1            | 샌더 활성화 상태 (0: 비활성, 1: 활성)          |
 | `checksum`           | `unsigned short`   | 2            | `Current Forc`부터 `Sander Active Flag`까지의 CRC-16 값 |
 
