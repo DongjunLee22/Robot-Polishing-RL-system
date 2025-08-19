@@ -1,0 +1,9 @@
+처음 컴퓨터 키면,
+1. git pull
+2. git branch -> 현재 rl 브랜치로 되어있는지 확인
+2.1 git switch rl  -> rl브랜치가 아니면 rl 브랜치로 이동
+
+내용 수정 및 작성 후
+3. git add .
+git commit -m "내용작성"
+git push origin HEAD
