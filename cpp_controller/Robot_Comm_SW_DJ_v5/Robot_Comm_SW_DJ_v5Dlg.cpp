@@ -1441,8 +1441,6 @@ UINT CRobotCommSWDJv5Dlg::Thread_Contact_Flat_RL(LPVOID pParam)
 
 	t_start = system_clock::now();
 
-	printf("Check 1\n");
-
 	while (g_pDlg->m_flags.robotRunning.load())
 	{
 		auto ts = std::chrono::steady_clock::now();
@@ -1451,16 +1449,14 @@ UINT CRobotCommSWDJv5Dlg::Thread_Contact_Flat_RL(LPVOID pParam)
 		auto Th_robotData_flat = g_pDlg->m_robotState.getSnapshot();
 		auto Th_sensorData_flat = g_pDlg->m_ftSensor.getSnapshot();
 
-		printf("Check 2\n");
-
 		// =========================================================================
 		// 1. 서버로부터 데이터 수신
 		// =========================================================================
+		// Episode가 종료된 경우 , RL Episode Flag가 true로 설정됨
+		//	 => 목표 접촉력 변경
 		g_pDlg->m_tcpip.episode_state_flag = g_pDlg->m_received_RL_Episode_Flag.load();
-
 		if (g_pDlg->m_tcpip.episode_state_flag.load() == true)
 		{
-			//g_pDlg->m_setting.Target_Force_N.store(-30.0f);
 			std::random_device rd;
 			std::mt19937 gen(rd());
 			std::uniform_int_distribution<> dist(30, 50);
@@ -1507,8 +1503,6 @@ UINT CRobotCommSWDJv5Dlg::Thread_Contact_Flat_RL(LPVOID pParam)
 		{
 			g_pDlg->m_tcpClient.Send(packetToSend.data(), packetToSend.size());
 		}
-
-		printf("Check 3\n");
 
 		// =========================================================================
 		// 3. 로봇 구동제어
