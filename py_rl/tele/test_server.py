@@ -10,7 +10,7 @@ import sys
 # 1) C++ -> Python (수신용)
 # Big-Endian: unsigned short(SOF), float*4, unsigned char, unsigned short(checksum)
 CPP_TO_PY_PACKET_FORMAT = ">HffffBH"
-CPP_TO_PY_PACKET_SIZE   = 33
+CPP_TO_PY_PACKET_SIZE   = 29
 CPP_TO_PY_SOF           = 0xAAAA
 
 # 2) Python -> C++ (송신용)

@@ -18,7 +18,7 @@ import torch.optim as optim
 # CONFIG - TEST VERSION
 # =========================
 CONFIG = {
-    "STATE_DIM": 7,              # current_pressure 제거하여 7개로 변경
+    "STATE_DIM": 6,              # 6개 상태 변수로 수정
     "ACTION_DIM": 1,
     "HIDDEN": 256,
     "LR": 3e-4,
@@ -57,6 +57,9 @@ CONFIG = {
     "LOG_EVERY_CTRL": 25,         # 테스트용으로 더 자주 로깅
     "SAVE_THRESH_FREQ": 5,        # 테스트용으로 더 자주 저장
     "SAVE_THRESH_PCT": 80,        # 테스트용으로 낮춤
+    
+    # Model saving
+    "MODEL_SAVE_DIR": "saved_agents",  # 모델 저장 전용 폴더
 }
 
 # =========================
@@ -238,12 +241,12 @@ class ResidualRLCommunicator:
         self.conn = None
         self.connected = False
         
-        # 패킷 구조 정의 - current_pressure 제거하여 7개 상태 변수
-        self.CPP_TO_PY_PACKET_FORMAT = ">HfffffffBH"  # Big-Endian
-        self.CPP_TO_PY_PACKET_SIZE = 29  # 2+4+4+4+4+4+4+1+2 = 29 bytes
+        # 패킷 구조 정의 - 6개 float + 1개 bool로 수정
+        self.CPP_TO_PY_PACKET_FORMAT = ">HffffffBH"  # Big-Endian, 6개 float + 1개 bool
+        self.CPP_TO_PY_PACKET_SIZE = 29  # 2+4×6+1+2 = 29 bytes
         self.CPP_TO_PY_SOF = 0xAAAA
         
-        self.PY_TO_CPP_PACKET_FORMAT = ">HffBH"  # Big-Endian
+        self.PY_TO_CPP_PACKET_FORMAT = ">HfBBH"  # Big-Endian, 2+4+1+1+2 = 10 bytes
         self.PY_TO_CPP_PACKET_SIZE = 10  # 2+4+1+1+2 = 10 bytes
         self.PY_TO_CPP_SOF = 0xBBBB
         
@@ -335,11 +338,11 @@ class ResidualRLCommunicator:
                 print(f"⚠️ [경고] {self.CPP_TO_PY_PACKET_SIZE}B가 아닌 {len(data)}B 수신 (총 {self.packet_size_errors}회)")
                 return None, False
             
-            # 2. 언패킹
+            # 2. 언패킹 - 포맷 수정
             try:
                 (sof, current_force, target_force, force_error, force_error_dot, 
                  force_error_int, pi_output, sander_active, 
-                 received_checksum) = struct.unpack(self.CPP_TO_PY_PACKET_FORMAT, data)
+                 received_checksum) = struct.unpack(">HffffffBH", data)
             except struct.error as e:
                 print(f"⚠️ [오류] struct.unpack 실패: {e}")
                 return None, False
@@ -350,16 +353,15 @@ class ResidualRLCommunicator:
                 print(f"⚠️ [오류] SOF 불일치: {hex(sof)} (기대: {hex(self.CPP_TO_PY_SOF)}) (총 {self.sof_errors}회)")
                 return None, False
             
-            # 4. 체크섬 검증
-            calculated_checksum = self.simple_xor_checksum(data[:-2]) & 0xFF
-            received_checksum_u8 = received_checksum & 0xFF
+            # 4. 체크섬 검증 (CRC-16)
+            calculated_checksum = self.calculate_crc16(data[:-2])
             
-            if received_checksum_u8 != calculated_checksum:
+            if received_checksum != calculated_checksum:
                 self.checksum_errors += 1
-                print(f"❌ [체크섬 오류] recv:{received_checksum_u8} calc:{calculated_checksum} (총 {self.checksum_errors}회)")
+                print(f"❌ [체크섬 오류] recv:{received_checksum} calc:{calculated_checksum} (총 {self.checksum_errors}회)")
                 return None, False
             
-            # 5. 상태 배열 구성
+            # 5. 상태 배열 구성 - 6개 변수로 수정
             state = np.array([
                 current_force,      # 0: RL_currentForceZ
                 target_force,       # 1: RL_targetForceZ  
@@ -367,7 +369,6 @@ class ResidualRLCommunicator:
                 force_error_dot,    # 3: RL_forceZErrordot
                 force_error_int,    # 4: RL_forceZErrorintegral
                 pi_output,          # 5: RL_pidFlag (float)
-                sander_active       # 6: RL_sanderactiveFlag
             ], dtype=np.float32)
             
             rl_flag = bool(sander_active)
@@ -381,8 +382,20 @@ class ResidualRLCommunicator:
             print(f"⚠️ Packet processing error: {e}")
             return None, False
 
+    def calculate_crc16(self, data: bytes) -> int:
+        """CRC-16/MODBUS 체크섬 계산 (C++와 동일)"""
+        crc = 0xFFFF
+        for byte in data:
+            crc ^= byte
+            for _ in range(8):
+                if crc & 0x0001:
+                    crc = (crc >> 1) ^ 0xA001
+                else:
+                    crc = crc >> 1
+        return crc
+
     def simple_xor_checksum(self, data: bytes) -> int:
-        """간단한 XOR 체크섬 (0~255)"""
+        """간단한 XOR 체크섬 (0~255) - 송신용"""
         checksum = 0
         for byte in data:
             checksum ^= byte
@@ -402,18 +415,18 @@ class ResidualRLCommunicator:
             # SOF(2) + rl_residual(4) + timing_accurate(1) + episode_done(1) + checksum(2)
             
             # 2. 체크섬 계산용 데이터 (checksum 제외 부분)
-            data_part = struct.pack(">HffB", 
+            data_part = struct.pack(">HfBB", 
                                   self.PY_TO_CPP_SOF, 
                                   float(rl_residual), 
-                                  float(timing_accurate), 
+                                  int(timing_accurate), 
                                   int(episode_done))
-            checksum = self.simple_xor_checksum(data_part) & 0xFF
+            checksum = self.calculate_crc16(data_part)
             
-            # 3. 최종 패킷 (SOF, float, float, unsigned char, checksum[uint16])
+            # 3. 최종 패킷 (SOF, float, unsigned char, unsigned char, checksum[uint16])
             final_packet = struct.pack(self.PY_TO_CPP_PACKET_FORMAT, 
                                      self.PY_TO_CPP_SOF, 
                                      float(rl_residual), 
-                                     float(timing_accurate), 
+                                     int(timing_accurate), 
                                      int(episode_done), 
                                      checksum)
             
@@ -548,16 +561,15 @@ class PneumaticPolishingEnvironment:
         return r_limited
 
     # ---- reward / done ----
-    def calculate_reward(self, state, action_residual):
+    def calculate_reward(self, state, action_residual, rl_flag):
         current_force, target_force = state[0], state[1]
         force_err = abs(current_force - target_force)
-        sander_active = bool(state[6])
         residual_change = abs(action_residual - self.prev_residual)
         # 1) tracking
         reward = -(force_err / self.cfg["MAX_FORCE_ERR"])
         if force_err < 1.0: reward += 0.5
-        # 2) smoothness
-        smooth_w = 0.2 if sander_active else 0.3
+        # 2) smoothness (rl_flag에 따라 가중치 조정)
+        smooth_w = 0.2 if rl_flag else 0.3
         reward += -smooth_w * (residual_change / self.cfg["MAX_PRESS_DELTA"])
         # 3) safety
         if current_force > 80.0: reward += -5.0
@@ -609,6 +621,11 @@ class PneumaticPolishingEnvironment:
             print("Failed to connect to Robot PC")
             return
 
+        # saved_agents 폴더 생성
+        model_save_dir = self.cfg["MODEL_SAVE_DIR"]
+        os.makedirs(model_save_dir, exist_ok=True)
+        print(f"📁 Model save directory: {model_save_dir}")
+
         print("🚀 TEST VERSION: TRUE Residual RL - 10 episodes, shorter steps")
         print("📡 RL sends residual at 50Hz, Robot sums PI(1kHz)+Residual.")
         print("⏱️  Each episode: ~20 seconds (1000 steps)")
@@ -653,7 +670,7 @@ class PneumaticPolishingEnvironment:
 
                 # (1) store prev transition & learn on 50Hz boundary
                 if prev_state is not None and prev_rl_flag:
-                    reward = self.calculate_reward(prev_state, prev_action)
+                    reward = self.calculate_reward(prev_state, prev_action, prev_rl_flag)
                     done = self.is_done(state)  # next_state-based done
                     self.agent.store_transition(prev_state, prev_action, reward, state, done)
                     self.current_episode_reward += reward
@@ -737,14 +754,14 @@ class PneumaticPolishingEnvironment:
             if self.current_episode_reward > self.best_episode_reward:
                 self.best_episode_reward = self.current_episode_reward
                 self.best_agent_episode = ep
-                self.agent.save_model(f"test_best_agent_episode_{ep+1}_reward_{self.best_episode_reward:.2f}.pth")
+                self.agent.save_model(f"{self.cfg['MODEL_SAVE_DIR']}/test_best_agent_episode_{ep+1}_reward_{self.best_episode_reward:.2f}.pth")
 
             # dynamic threshold saving (테스트용으로 더 자주)
             if ep % self.cfg["SAVE_THRESH_FREQ"] == 0 and ep > 0:
                 recent = self.agent.episode_rewards[-self.cfg["SAVE_THRESH_FREQ"]:]
                 th = np.percentile(recent, self.cfg["SAVE_THRESH_PCT"])
                 if self.current_episode_reward >= th:
-                    self.agent.save_model(f"test_high_perf_ep_{ep+1}_reward_{self.current_episode_reward:.2f}.pth")
+                    self.agent.save_model(f"{self.cfg['MODEL_SAVE_DIR']}/test_high_perf_ep_{ep+1}_reward_{self.current_episode_reward:.2f}.pth")
 
             # 에피소드 완료 요약
             print(f"\n🎯 === EPISODE {ep+1}/10 COMPLETED ===")
