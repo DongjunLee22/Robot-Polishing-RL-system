@@ -1453,10 +1453,13 @@ UINT CRobotCommSWDJv5Dlg::Thread_Contact_Flat_RL(LPVOID pParam)
 		{
 			std::random_device rd;
 			std::mt19937 gen(rd());
-			std::uniform_int_distribution<> dist(30, 50);
+			std::uniform_int_distribution<> dist(35, 50);
 			int random_force = dist(gen);
 
 			g_pDlg->m_setting.Target_Force_N.store(-1.0f * random_force);
+
+			g_pDlg->m_tcpip.episode_state_flag.store(false);
+			printf("에피소드 종료로 인한 목표 접촉력 변경\n");
 		}
 
 		g_pDlg->m_tcpip.is_new_message_received = g_pDlg->m_received_RL_Confirm_Flag.load();
@@ -2593,9 +2596,4 @@ void CRobotCommSWDJv5Dlg::OnRlDataReceived(const RLAgentPacket& packet)
 	m_received_RL_Pressure.store(packet.RL_ResidualP);
 	m_received_RL_Confirm_Flag.store(packet.RL_MessagerecvFlag == 1);
 	m_received_RL_Episode_Flag.store(packet.RL_EpisodeFlag == 1);
-
-	//// GUI 업데이트
-	//CString msg;
-	//msg.Format(_T("RL 데이터 수신: Voltage=%.2f"), packet.RL_ResidualP);
-	//var_status_gui.SetWindowTextW(msg);
 }

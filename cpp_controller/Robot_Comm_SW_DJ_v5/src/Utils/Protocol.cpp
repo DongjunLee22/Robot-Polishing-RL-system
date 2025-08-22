@@ -24,7 +24,7 @@ unsigned short calculate_crc16(const unsigned char* data, size_t length)
 
 // Packing 함수
 std::vector<char> PackRobotStatus(float current_forceZ, float target_forceZ, float error_forceZ, float error_forceZ_dot, float error_forceZ_int,
-	float cur_PID_output, unsigned char Sander_Flag)
+	float cur_PID_output, bool Sander_Flag)
 {
 	PythonCommPacket packet;
 	packet.sof = 0xAAAA;									// Start of Frame (2바이트)
@@ -35,9 +35,6 @@ std::vector<char> PackRobotStatus(float current_forceZ, float target_forceZ, flo
 	packet.RL_forceZErrorintegral = error_forceZ_int;		// z방향 접촉력 오차 적분값 (4바이트)
 	packet.RL_currentPID = cur_PID_output;					// 현재 PID 출력값 (4바이트)
 	packet.RL_sanderactiveFlag = Sander_Flag;				// Sander 활성화 플래그 (1바이트)
-
-	// 패킷 크기 출력 (디버깅용)
-	printf("PythonCommPacket size: %zu bytes\n", sizeof(packet));
 
 	// 바이트 순서 변환
 	packet.sof = htons(packet.sof);
@@ -55,48 +52,8 @@ std::vector<char> PackRobotStatus(float current_forceZ, float target_forceZ, flo
 	// 실제 전송할 데이터 크기 출력 (디버깅용)
 	std::vector<char> result(reinterpret_cast<const char*>(&packet),
 		reinterpret_cast<const char*>(&packet) + sizeof(packet));
-	printf("Sending packet size: %zu bytes\n", result.size());
 
 	return result;
-	
-	// 29바이트 버퍼 명시적 할당
-	//std::vector<char> buffer(29);
-	//size_t offset = 0;
-
-	//// SOF (2바이트)
-	//unsigned short sof = htons(0xAAAA);
-	//memcpy(&buffer[offset], &sof, sizeof(sof));
-	//offset += sizeof(sof);
-
-	//// 6개 float 값 (각 4바이트)
-	//float values[] = {
-	//	current_forceZ,
-	//	target_forceZ,
-	//	error_forceZ,
-	//	error_forceZ_dot,
-	//	error_forceZ_int,
-	//	cur_PID_output
-	//};
-
-	//for (auto value : values) {
-	//	unsigned long netValue = htonl(*reinterpret_cast<unsigned long*>(&value));
-	//	memcpy(&buffer[offset], &netValue, sizeof(netValue));
-	//	offset += sizeof(netValue);
-	//}
-
-	//// RL_sanderactiveFlag (1바이트)
-	//buffer[offset++] = Sander_Flag;  // 1바이트는 그대로 복사
-
-	//// 체크섬 계산 (2바이트)
-	//unsigned short checksum = calculate_crc16(
-	//	reinterpret_cast<const unsigned char*>(buffer.data()),
-	//	buffer.size() - sizeof(unsigned short));
-	//unsigned short net_checksum = htons(checksum);
-	//memcpy(&buffer[offset], &net_checksum, sizeof(net_checksum));
-
-	//printf("Manual buffer size: %zu bytes\n", buffer.size());
-
-	//return buffer;
 }
 
 // Unpacking 함수
